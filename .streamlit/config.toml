@@ -1,0 +1,14 @@
+[theme]
+# Buộc app luôn dùng light theme dù trình duyệt để ở dark mode.
+# Đây là cách chuẩn để tránh selectbox / text input hiện nền đen chữ trắng
+# lệch tone với card landing của app.
+base            = "light"
+primaryColor    = "#6159b7"   # màu nhấn (nút Chạy Phân tích)
+backgroundColor = "#f4f1eb"   # nền be sáng đồng bộ với card
+secondaryBackgroundColor = "#ffffff"
+textColor       = "#1e293b"
+font            = "sans serif"
+
+[client]
+# Ẩn menu deploy + toolbar không cần thiết
+toolbarMode = "minimal"

@@ -1,0 +1,1858 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ABSA Analyzer — Enterprise AI Tool</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300&family=DM+Mono:wght@400;500&display=swap"
+    rel="stylesheet" />
+  <style>
+    :root {
+      /* Cảm xúc Tích cực (Positive / Tốt) -> Xanh lá sáng (Emerald Green) */
+      --pos: #10B981;
+      --pos-bg: #D1FAE5;
+
+      /* Cảm xúc Tiêu cực (Negative / Kém) -> Đỏ sáng (Rose Red) */
+      --neg: #EF4444;
+      --neg-bg: #FEE2E2;
+
+      --bg: #F4F2EE;
+      --surface: #FFFFFF;
+      --surface2: #F0EDE8;
+      --border: rgba(0, 0, 0, 0.08);
+      --border2: rgba(0, 0, 0, 0.14);
+      --text-primary: #1A1816;
+      --text-secondary: #5A5650;
+      --text-muted: #9A958E;
+      --accent: #2f91f2;
+      --accent-light: #EEEDFE;
+      --accent-mid: #6159b7;
+
+      /* Cấu hình màu cho Tab 2 từ file gốc */
+      --battery: #534AB7;
+      --connectivity: #D85A30;
+      --speaker: #BA7517;
+      --general: #1D9E75;
+      --keyboard: #D4537E;
+      --warranty: #3A6B10;
+      --staff: #888780;
+      --display: #378ADD;
+
+      --sidebar-w: 230px;
+      --topbar-h: 52px;
+      --radius: 10px;
+      --radius-sm: 6px;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text-primary);
+      font-size: 13px;
+      line-height: 1.5;
+      overflow: hidden;
+    }
+
+    /* CSS định dạng khu vực chú thích */
+    .chart-legend {
+      display: flex;
+      gap: 12px;
+      font-size: 11px;
+      color: var(--text-muted);
+      font-weight: 400;
+      align-items: center;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .legend-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .mono {
+      font-family: 'DM Mono', monospace
+    }
+
+    /* ========================================= */
+    /* CSS LOGIC ĐIỀU HƯỚNG TABS (NO JS)         */
+    /* ========================================= */
+    input[type="radio"].tab-logic {
+      display: none;
+    }
+
+    .tab-content {
+      display: none;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+    }
+
+    #t1:checked~.layout #content1,
+    #t3:checked~.layout #content3,
+    #t4:checked~.layout #content4 {
+      display: block;
+    }
+
+    #t2:checked~.layout #content2 {
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* Tab 2 cần flex để fix 2 cột (sidebar + main) */
+
+    /* Active State cho Topbar Nav */
+    #t1:checked~.topbar .nav-btn[for="t1"],
+    #t2:checked~.topbar .nav-btn[for="t2"],
+    #t3:checked~.topbar .nav-btn[for="t3"],
+    #t4:checked~.topbar .nav-btn[for="t4"] {
+      color: #fff;
+      background: rgba(255, 255, 255, .15);
+    }
+
+    /* ========================================= */
+    /* TOPBAR (GỐC)                              */
+    /* ========================================= */
+    .topbar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: var(--topbar-h);
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      padding: 0 16px 0 0;
+      z-index: 100;
+      border-bottom: 1px solid rgba(255, 255, 255, .08)
+    }
+
+    .topbar-logo {
+      width: var(--sidebar-w);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 0 20px;
+      flex-shrink: 0
+    }
+
+    .logo-mark {
+      width: 28px;
+      height: 28px;
+      background: rgba(255, 255, 255, .15);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(255, 255, 255, .2)
+    }
+
+    .logo-mark svg {
+      width: 15px;
+      height: 15px
+    }
+
+    .logo-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: #fff;
+      letter-spacing: -.3px
+    }
+
+    .logo-text span {
+      font-weight: 300;
+      opacity: .7
+    }
+
+    .topbar-nav {
+      display: flex;
+      gap: 2px;
+      flex: 1
+    }
+
+    .nav-btn {
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: none;
+      background: transparent;
+      color: rgba(255, 255, 255, .6);
+      cursor: pointer;
+      font-family: inherit;
+      letter-spacing: .01em;
+      transition: all .15s;
+      display: inline-block;
+    }
+
+    .nav-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, .1)
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto
+    }
+
+    .upload-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, .25);
+      background: transparent;
+      color: #fff;
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s
+    }
+
+    .upload-btn:hover {
+      background: rgba(255, 255, 255, .1)
+    }
+
+    .run-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 500;
+      padding: 6px 16px;
+      border-radius: 20px;
+      border: none;
+      background: #fff;
+      color: var(--accent);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all .15s
+    }
+
+    .run-btn:hover {
+      background: rgba(255, 255, 255, .9);
+      transform: translateY(-1px)
+    }
+
+    .user-badge {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .2);
+      border: 2px solid rgba(255, 255, 255, .3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      font-weight: 600;
+      color: #fff
+    }
+
+    /* LAYOUT TỔNG */
+    .layout {
+      display: flex;
+      flex: 1;
+      margin-top: 0 !important;
+      height: calc(100vh - var(--topbar-h));
+    }
+
+    /* ========================================= */
+    /* UI ELEMENTS (TỪ FILE HTML GỐC TAB 2)      */
+    /* ========================================= */
+    .sidebar {
+      width: var(--sidebar-w);
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      flex-shrink: 0;
+      overflow-y: auto;
+    }
+
+    .sidebar::-webkit-scrollbar {
+      width: 3px
+    }
+
+    .sidebar::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px
+    }
+
+    .s-section-label {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      padding: 0 8px;
+      margin-bottom: 4px
+    }
+
+    .s-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12.5px;
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all .12s;
+      user-select: none
+    }
+
+    .s-item:hover {
+      background: var(--surface2);
+      color: var(--text-primary)
+    }
+
+    .s-item.active {
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500
+    }
+
+    .s-item.active .s-dot {
+      background: var(--accent-mid)
+    }
+
+    .s-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--border2)
+    }
+
+    .s-count {
+      margin-left: auto;
+      font-size: 10.5px;
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace
+    }
+
+    .s-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0 4px
+    }
+
+    .main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow-y: scroll;
+    }
+
+    .toolbar {
+      padding: 12px 20px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      max-width: 380px
+    }
+
+    .search-wrap input {
+      width: 100%;
+      padding: 8px 12px 8px 34px;
+      font-size: 12.5px;
+      border-radius: 20px;
+      border: 1px solid var(--border2);
+      background: var(--surface2);
+      color: var(--text-primary);
+      font-family: inherit;
+      outline: none;
+    }
+
+    .search-wrap input:focus {
+      border-color: var(--accent-mid);
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(83, 74, 183, .1)
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted)
+    }
+
+    .toolbar-filters {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+      margin-left: auto
+    }
+
+
+
+    /* METRICS ROW (Dùng cho cả Tab 1 & Tab 2) */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+    }
+
+    .mc {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 14px 16px
+    }
+
+    .mc-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+      font-weight: 400
+    }
+
+    .mc-val {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+      line-height: 1;
+      letter-spacing: -.5px
+    }
+
+    .mc-val.red {
+      color: var(--neg)
+    }
+
+    .mc-val.green {
+      color: var(--pos)
+    }
+
+    .mc-val.accent {
+      color: var(--accent-mid)
+    }
+
+    .mc-sub {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px
+    }
+
+    .mc-trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 10.5px;
+      padding: 1px 6px;
+      border-radius: 10px;
+      margin-left: 6px;
+      font-weight: 500
+    }
+
+    .mc-trend.up {
+      background: var(--pos-bg);
+      color: var(--pos)
+    }
+
+    .mc-trend.down {
+      background: var(--neg-bg);
+      color: var(--neg)
+    }
+
+    /* Tab 2: FEED AREA */
+    .content-area {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 240px;
+      flex: 1;
+      min-height: 0;
+      max-width: 100%;
+    }
+
+    .feed-col-wrap {
+      display: flex;
+      flex-direction: column;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .feed-col {
+      padding: 0px 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .feed-col::-webkit-scrollbar {
+      width: 4px
+    }
+
+    .feed-col::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 4px
+    }
+
+    .feed-header {
+      position: sticky;
+      top: 0;
+      background: var(--surface);
+      z-index: 10;
+      display: flex;
+      padding: 15px;
+      border-radius: 10px;
+      border: 1px solid var(--border2);
+      align-items: center;
+      justify-content: space-between;
+      flex-shrink: 0;
+    }
+
+    /* 
+    .feed-body {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      overflow-y: scroll;
+      flex: 1;
+    } */
+
+    .feed-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary)
+    }
+
+    .feed-count {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace
+    }
+
+    .review-card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      border: 1px solid var(--border);
+      padding: 12px 14px;
+      transition: all .15s;
+      cursor: pointer;
+      animation: fadeIn .2s ease both
+    }
+
+    .review-card:hover {
+      border-color: var(--border2);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, .06);
+      transform: translateY(-1px)
+    }
+
+    .rc-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px
+    }
+
+    .rc-sentence {
+      font-size: 13px;
+      color: var(--text-primary);
+      line-height: 1.55;
+      flex: 1
+    }
+
+    .rc-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center
+    }
+
+    .asp-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      padding: 2px 9px;
+      border-radius: 20px;
+      font-weight: 500
+    }
+
+    .asp-pill.pos {
+      background: var(--pos-bg);
+      color: var(--pos)
+    }
+
+    .asp-pill.neg {
+      background: var(--neg-bg);
+      color: var(--neg)
+    }
+
+    .asp-dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: currentColor;
+      opacity: .7
+    }
+
+    .prod-pill {
+      display: inline-flex;
+      align-items: center;
+      font-size: 10.5px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      background: var(--accent-light);
+      color: var(--accent);
+      font-weight: 500;
+      margin-left: auto
+    }
+
+    /* Tab 2: CHART PANEL */
+    .chart-panel {
+      border-left: 1px solid var(--border);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      background: var(--surface)
+    }
+
+    .chart-panel::-webkit-scrollbar {
+      width: 3px
+    }
+
+    .chart-panel::-webkit-scrollbar-thumb {
+      background: var(--border2);
+      border-radius: 3px
+    }
+
+    .cp-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 10px
+    }
+
+    .asp-bar-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 6px
+    }
+
+    .asp-bar-name {
+      font-size: 11px;
+      color: var(--text-secondary);
+      width: 70px;
+      flex-shrink: 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis
+    }
+
+    .asp-bar-track {
+      flex: 1;
+      height: 6px;
+      background: var(--surface2);
+      border-radius: 3px;
+      overflow: hidden
+    }
+
+    .asp-bar-fill {
+      height: 100%;
+      border-radius: 3px;
+    }
+
+    .asp-bar-val {
+      font-size: 10px;
+      color: var(--text-muted);
+      width: 24px;
+      text-align: right;
+      flex-shrink: 0;
+      font-family: 'DM Mono', monospace
+    }
+
+    .sentiment-stack {
+      display: flex;
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      gap: 1.5px
+    }
+
+    .sentiment-labels {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 5px
+    }
+
+    .sentiment-labels span {
+      font-size: 10px;
+      font-family: 'DM Mono', monospace
+    }
+
+    .alert-item {
+      display: flex;
+      gap: 8px;
+      padding: 9px 10px;
+      border-radius: var(--radius-sm);
+      background: var(--surface2)
+    }
+
+    .alert-icon {
+      width: 22px;
+      height: 22px;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0
+    }
+
+    .alert-text-wrap {
+      flex: 1;
+      min-width: 0
+    }
+
+    .alert-title {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-primary);
+      line-height: 1.3
+    }
+
+    .alert-desc {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 2px;
+      line-height: 1.4
+    }
+
+    .cp-divider {
+      height: 1px;
+      background: var(--border)
+    }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--surface);
+      flex-shrink: 0;
+    }
+
+    .page-info {
+      font-size: 11px;
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace
+    }
+
+    .page-btns {
+      display: flex;
+      gap: 4px
+    }
+
+    .page-btn {
+      font-size: 11.5px;
+      padding: 5px 10px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--border2);
+      background: var(--surface);
+      cursor: pointer;
+      color: var(--text-secondary);
+      font-family: inherit;
+    }
+
+    .page-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent)
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(4px)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0)
+      }
+    }
+
+    /* DASHBOARD CUSTOM CLASSES (TAB 1) */
+    .dashboard-grid {
+      padding: 20px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+      letter-spacing: 0.02em;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .donut-mock {
+      width: 160px;
+      height: 160px;
+      border-radius: 50%;
+      background: conic-gradient(var(--pos) 0% 70%, var(--neg) 70% 100%);
+      position: relative;
+      margin: 10px auto;
+    }
+
+    .donut-mock::after {
+      content: "60%";
+      position: absolute;
+      inset: 30px;
+      background: var(--surface);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Bảng xếp hạng sao */
+    .ranking-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 12px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .ranking-item:last-child {
+      border-bottom: none;
+    }
+
+    .rank-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 12px;
+      color: #fff;
+      font-family: 'DM Mono', monospace;
+      flex-shrink: 0;
+    }
+
+    .rank-1 {
+      background: linear-gradient(135deg, #FFD700, #FDB931);
+      box-shadow: 0 2px 6px rgba(253, 185, 49, 0.4);
+    }
+
+    .rank-2 {
+      background: linear-gradient(135deg, #E0E0E0, #A0A0A0);
+      box-shadow: 0 2px 6px rgba(160, 160, 160, 0.4);
+    }
+
+    .rank-3 {
+      background: linear-gradient(135deg, #E29B5A, #B87333);
+      box-shadow: 0 2px 6px rgba(184, 115, 51, 0.4);
+    }
+
+    .rank-other {
+      background: var(--surface2);
+      color: var(--text-secondary);
+    }
+
+    .rank-info {
+      flex: 1;
+    }
+
+    .rank-name {
+      font-weight: 500;
+      font-size: 13px;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .rank-stars {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11.5px;
+    }
+
+    .stars-visual {
+      color: #FFB800;
+      font-size: 14px;
+      letter-spacing: 1px;
+    }
+
+    .stars-score {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .reviews-count {
+      color: var(--text-muted);
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- RADIOS ẨN ĐỂ CHUYỂN TAB -->
+  <input type="radio" name="tabs" id="t1" class="tab-logic">
+  <input type="radio" name="tabs" id="t2" class="tab-logic" checked>
+  <input type="radio" name="tabs" id="t3" class="tab-logic">
+  <input type="radio" name="tabs" id="t4" class="tab-logic">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="topbar-logo">
+      <div class="logo-mark">
+        <svg viewBox="0 0 15 15" fill="none">
+          <rect x="1" y="1" width="5" height="5" rx="1.2" fill="white" opacity=".9" />
+          <rect x="9" y="1" width="5" height="5" rx="1.2" fill="white" opacity=".6" />
+          <rect x="1" y="9" width="5" height="5" rx="1.2" fill="white" opacity=".6" />
+          <rect x="9" y="9" width="5" height="5" rx="1.2" fill="white" opacity=".35" />
+        </svg>
+      </div>
+      <div class="logo-text">ABSA <span>Analyzer</span></div>
+    </div>
+    <nav class="topbar-nav">
+      <label for="t1" class="nav-btn">Tổng quan</label>
+      <label for="t2" class="nav-btn">Phân tích dữ liệu</label>
+      <label for="t3" class="nav-btn">AI Inference</label>
+      <label for="t4" class="nav-btn">Hệ thống</label>
+    </nav>
+  </div>
+
+  <!-- KHUNG LAYOUT TỔNG -->
+  <div class="layout">
+
+    <!-- ========================================= -->
+    <!-- TAB 1: DASHBOARD / EXECUTIVE              -->
+    <!-- ========================================= -->
+    <div class="tab-content" id="content1">
+      <div style="max-width: 100% ; margin: 0 auto; padding-bottom: 40px; padding-left: 20px; padding-right: 20px;">
+
+        <div class="metrics-row" style="border-bottom: none; padding-bottom: 0;">
+          <div class="mc">
+            <div class="mc-label">Tổng đánh giá (Tháng này)</div>
+            <div class="mc-val accent">24,802</div>
+            <div class="mc-sub">Tăng 12% so với tháng trước</div>
+          </div>
+          <div class="mc">
+            <div class="mc-label">Điểm NPS thương hiệu</div>
+            <div class="mc-val green">72<span class="mc-trend up">▲ 5</span></div>
+            <div class="mc-sub">Thuộc nhóm Tốt trong ngành</div>
+          </div>
+          <div class="mc">
+            <div class="mc-label">Tỷ lệ Phàn nàn (Negative)</div>
+            <div class="mc-val red">14.2%<span class="mc-trend down">▼ 2%</span></div>
+            <div class="mc-sub">Khía cạnh Pin phàn nàn nhiều nhất</div>
+          </div>
+          <div class="mc">
+            <div class="mc-label">Tỷ lệ Hài lòng (Positive)</div>
+            <div class="mc-val green">61.0%<span class="mc-trend up">▲ 3%</span></div>
+            <div class="mc-sub">Khía cạnh Màn hình hài lòng nhất</div>
+          </div>
+        </div>
+
+        <!-- ROW 2: Biểu đồ & Xếp hạng Sao -->
+        <!--  XU HƯỚNG & MỨC ĐỘ ẢNH HƯỞNG -->
+        <div class="dashboard-grid" style="grid-template-columns: 2fr 1fr; margin-top: -10px;">
+
+          <!-- Biểu đồ Trend (Giả lập bằng CSS) -->
+          <div class="card">
+            <div class="card-title">Xu hướng Cảm xúc (30 ngày qua)</div>
+            <div class="chart-legend">
+              <div class="legend-item">
+                <div class="legend-dot" style="background: var(--pos)"></div> Tích cực
+              </div>
+              <div class="legend-item">
+                <div class="legend-dot" style="background: var(--neg)"></div> Tiêu cực
+              </div>
+            </div>
+
+            <!-- Wrapper tạo khoảng trống margin bên trong Card để chứa text Trục X/Y -->
+            <div
+              style="margin-left: 35px; margin-bottom: 25px; margin-top: 15px; margin-right: 15px; height: 160px; position: relative; border-left: 1px solid var(--border); border-bottom: 1px solid var(--border);">
+
+              <!-- Trục Y (Được căn lề chuẩn xác) -->
+              <div
+                style="position:absolute; top:-6px; left:-40px; width:30px; text-align:right; font-size:10px; color:var(--text-muted)">
+                100%</div>
+              <div
+                style="position:absolute; top:25%; left:-40px; width:30px; transform:translateY(-50%); text-align:right; font-size:10px; color:var(--text-muted)">
+                75%</div>
+              <div
+                style="position:absolute; top:50%; left:-40px; width:30px; transform:translateY(-50%); text-align:right; font-size:10px; color:var(--text-muted)">
+                50%</div>
+              <div
+                style="position:absolute; top:75%; left:-40px; width:30px; transform:translateY(-50%); text-align:right; font-size:10px; color:var(--text-muted)">
+                25%</div>
+              <div
+                style="position:absolute; bottom:-6px; left:-40px; width:30px; text-align:right; font-size:10px; color:var(--text-muted)">
+                0%</div>
+
+              <!-- SVG Đồ thị (Khớp đúng 100% khung bên trong, tọa độ 0 -> 100) -->
+              <svg width="100%" height="100%" viewBox="0 0 100 100" preserveAspectRatio="none"
+                style="position:absolute; top:0; left:0;">
+                <!-- Đường Pos (Xanh lá) -->
+                <polyline points="0,75 25,70 50,45 75,35 100,25" fill="none" stroke="var(--pos)" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" />
+                <polygon points="0,100 0,75 25,70 50,45 75,35 100,25 100,100" fill="var(--pos-bg)" opacity="0.4" />
+
+                <!-- Đường Neg (Đỏ) -->
+                <polyline points="0,60 25,65 50,75 75,85 100,80" fill="none" stroke="var(--neg)" stroke-width="2.5"
+                  stroke-linecap="round" stroke-linejoin="round" />
+              </svg>
+
+              <!-- Trục X (Được neo chính xác vào các mốc 0%, 25%, 50%, 75%, 100% của biểu đồ) -->
+              <div
+                style="position:absolute; bottom:-24px; left:0; transform:translateX(-50%); font-size:10px; color:var(--text-muted)">
+                Tuần 1</div>
+              <div
+                style="position:absolute; bottom:-24px; left:25%; transform:translateX(-50%); font-size:10px; color:var(--text-muted)">
+                Tuần 2</div>
+              <div
+                style="position:absolute; bottom:-24px; left:50%; transform:translateX(-50%); font-size:10px; color:var(--text-muted)">
+                Tuần 3</div>
+              <div
+                style="position:absolute; bottom:-24px; left:75%; transform:translateX(-50%); font-size:10px; color:var(--text-muted)">
+                Tuần 4</div>
+              <div
+                style="position:absolute; bottom:-24px; left:100%; transform:translateX(-50%); font-size:10px; color:var(--text-muted)">
+                Hiện tại</div>
+
+            </div>
+          </div>
+
+          <!-- Key Driver Analysis (Mức độ ảnh hưởng) -->
+          <div class="card">
+            <div class="card-title">Mức độ ảnh hưởng lên Sự hài lòng
+              <span style="font-size:14px; cursor:pointer;" title="Khía cạnh nào làm tăng/giảm NPS nhiều nhất">ℹ️</span>
+            </div>
+            <div class="chart-legend">
+              <div class="legend-item"><span class="legend-dot" style="background:var(--pos)"></span>Làm tăng điểm</div>
+              <div class="legend-item"><span class="legend-dot" style="background:var(--neg)"></span>Làm tụt điểm</div>
+            </div>
+            <div style="display:flex; flex-direction:column; gap:16px; margin-top:10px;">
+
+              <!-- Driver Tích cực -->
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+                  <span style="font-weight:500">Màn hình (Display)</span> <span
+                    style="color:var(--pos); font-weight:600;">+18% NPS</span>
+                </div>
+                <div style="height:6px; background:var(--surface2); border-radius:3px;">
+                  <div style="width:70%; height:100%; background:var(--pos); border-radius:3px;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+                  <span style="font-weight:500">Giá cả (Price)</span> <span
+                    style="color:var(--pos); font-weight:600;">+12% NPS</span>
+                </div>
+                <div style="height:6px; background:var(--surface2); border-radius:3px;">
+                  <div style="width:45%; height:100%; background:var(--pos); border-radius:3px;"></div>
+                </div>
+              </div>
+
+              <div style="height:1px; background:var(--border); margin:4px 0;"></div>
+
+              <!-- Driver Tiêu cực -->
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+                  <span style="font-weight:500">Pin (Battery)</span> <span
+                    style="color:var(--neg); font-weight:600;">-24% NPS</span>
+                </div>
+                <div
+                  style="height:6px; background:var(--surface2); border-radius:3px; display:flex; justify-content:flex-end;">
+                  <div style="width:85%; height:100%; background:var(--neg); border-radius:3px;"></div>
+                </div>
+              </div>
+
+              <div>
+                <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px;">
+                  <span style="font-weight:500">Bàn phím (Keyboard)</span> <span
+                    style="color:var(--neg); font-weight:600;">-10% NPS</span>
+                </div>
+                <div
+                  style="height:6px; background:var(--surface2); border-radius:3px; display:flex; justify-content:flex-end;">
+                  <div style="width:35%; height:100%; background:var(--neg); border-radius:3px;"></div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+        <div class="dashboard-grid">
+          <!-- Bảng xếp hạng sản phẩm (Yêu cầu mới) -->
+          <div class="card">
+            <div class="card-title">
+              Bảng Xếp Hạng Đánh Giá Sản Phẩm
+              <span
+                style="font-size:10px; font-weight:normal; color:var(--text-muted); background:var(--surface2); padding:2px 8px; border-radius:10px;">Ưu
+                tiên Sao & Lượt Reviews</span>
+            </div>
+            <div class="ranking-list">
+              <!-- Top 1 -->
+              <div class="ranking-item">
+                <div class="rank-badge rank-1">1</div>
+                <div class="rank-info">
+                  <div class="rank-name">Nokia 105 4G Pro</div>
+                  <div class="rank-stars">
+                    <span class="stars-visual">★★★★★</span>
+                    <span class="stars-score">4.8</span>
+                    <span class="reviews-count">• 5,120 đánh giá</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Top 2 -->
+              <div class="ranking-item">
+                <div class="rank-badge rank-2">2</div>
+                <div class="rank-info">
+                  <div class="rank-name">HONOR X8b</div>
+                  <div class="rank-stars">
+                    <span class="stars-visual">★★★★☆</span>
+                    <span class="stars-score">4.6</span>
+                    <span class="reviews-count">• 3,840 đánh giá</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Top 3 -->
+              <div class="ranking-item">
+                <div class="rank-badge rank-3">3</div>
+                <div class="rank-info">
+                  <div class="rank-name">Nokia HMD 105</div>
+                  <div class="rank-stars">
+                    <span class="stars-visual">★★★★☆</span>
+                    <span class="stars-score">4.5</span>
+                    <span class="reviews-count">• 2,105 đánh giá</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Top 4 -->
+              <div class="ranking-item">
+                <div class="rank-badge rank-other">4</div>
+                <div class="rank-info">
+                  <div class="rank-name">Nokia 220 4G</div>
+                  <div class="rank-stars">
+                    <span class="stars-visual" style="color:var(--text-muted)">★★★☆☆</span>
+                    <span class="stars-score">3.8</span>
+                    <span class="reviews-count">• 1,420 đánh giá</span>
+                  </div>
+                </div>
+              </div>
+              <!-- Top 5 -->
+              <div class="ranking-item">
+                <div class="rank-badge rank-other">5</div>
+                <div class="rank-info">
+                  <div class="rank-name">Masstel IZI T6</div>
+                  <div class="rank-stars">
+                    <span class="stars-visual" style="color:var(--text-muted)">★★★☆☆</span>
+                    <span class="stars-score">3.6</span>
+                    <span class="reviews-count">• 980 đánh giá</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cảm xúc tổng hợp -->
+          <div class="card">
+            <div class="card-title">Cảm xúc tổng hợp (Toàn bộ Brand)</div>
+            <div class="donut-mock"></div>
+            <div style="display:flex; justify-content:center; gap: 16px; margin-top: 24px;">
+              <span style="font-size:12px;"><span style="color:var(--pos)">●</span> Tích cực (70%)</span>
+              <span style="font-size:12px;"><span style="color:var(--neg)">●</span> Tiêu cực (30%)</span>
+            </div>
+            <div style="text-align:center; margin-top:12px; font-size:11px; color:var(--text-muted);">
+              Dữ liệu tổng hợp từ 24,802 câu đánh giá.
+            </div>
+          </div>
+
+        </div>
+
+        <!-- ROW 3: Heatmap -->
+        <div style="padding: 0 20px;">
+          <div class="card" style="margin-bottom:20px;">
+            <div class="card-title">Phân Tích Khía Cạnh (Heatmap)</div>
+            <div class="chart-legend">
+              <div class="legend-item"><span class="legend-dot" style="background:var(--pos)"></span>Tốt</div>
+              <div class="legend-item"><span class="legend-dot" style="background:var(--neg)"></span>Kém</div>
+            </div>
+            <table style="width:100%; border-collapse:collapse; text-align:left;">
+              <thead>
+                <tr style="border-bottom:1px solid var(--border); color:var(--text-muted); font-size:11px;">
+                  <th style="padding:8px">Sản phẩm</th>
+                  <th style="padding:8px">Pin</th>
+                  <th style="padding:8px">Màn hình</th>
+                  <th style="padding:8px">Bàn phím</th>
+                  <th style="padding:8px">Loa thoại</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- DÒNG 1: Nokia 105 4G Pro -->
+                <tr>
+                  <td style="padding:12px 8px; font-weight:500; font-size:12px; border-bottom:1px solid var(--border);">
+                    Nokia 105 4G Pro</td>
+
+                  <td style="padding:12px 8px; border-bottom:1px solid var(--border);">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <div class="asp-bar-track">
+                        <div class="asp-bar-fill" style="width:90%; background:var(--pos)"></div>
+                      </div>
+                      <span
+                        style="font-size:10px; font-weight:600; font-family:'DM Mono',monospace; color:var(--pos); width:24px; text-align:right;">90%</span>
+                    </div>
+                  </td>
+
+                  <td style="padding:12px 8px; border-bottom:1px solid var(--border);">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <div class="asp-bar-track">
+                        <div class="asp-bar-fill" style="width:35%; background:var(--neg)"></div>
+                      </div>
+                      <span
+                        style="font-size:10px; font-weight:600; font-family:'DM Mono',monospace; color:var(--neg); width:24px; text-align:right;">35%</span>
+                    </div>
+                  </td>
+
+                  <td style="padding:12px 8px; border-bottom:1px solid var(--border);">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <div class="asp-bar-track">
+                        <div class="asp-bar-fill" style="width:75%; background:var(--pos)"></div>
+                      </div>
+                      <span
+                        style="font-size:10px; font-weight:600; font-family:'DM Mono',monospace; color:var(--pos); width:24px; text-align:right;">75%</span>
+                    </div>
+                  </td>
+
+                  <td style="padding:12px 8px; border-bottom:1px solid var(--border);">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <div class="asp-bar-track">
+                        <div class="asp-bar-fill" style="width:95%; background:var(--pos)"></div>
+                      </div>
+                      <span
+                        style="font-size:10px; font-weight:600; font-family:'DM Mono',monospace; color:var(--pos); width:24px; text-align:right;">95%</span>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- DÒNG 2: HONOR X8b -->
+                <tr>
+                  <td style="padding:12px 8px; font-weight:500; font-size:12px; border-bottom:1px solid var(--border);">
+                    HONOR X8b</td>
+
+                  <td style="padding:12px 8px; border-bottom:1px solid var(--border);">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <div class="asp-bar-track">
+                        <div class="asp-bar-fill" style="width:65%; background:var(--neg)"></div>
+                      </div>
+                      <span
+                        style="font-size:10px; font-weight:600; font-family:'DM Mono',monospace; color:var(--neg); width:24px; text-align:right;">65%</span>
+                    </div>
+                  </td>
+
+                  <td style="padding:12px 8px; border-bottom:1px solid var(--border);">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <div class="asp-bar-track">
+                        <div class="asp-bar-fill" style="width:85%; background:var(--pos)"></div>
+                      </div>
+                      <span
+                        style="font-size:10px; font-weight:600; font-family:'DM Mono',monospace; color:var(--pos); width:24px; text-align:right;">85%</span>
+                    </div>
+                  </td>
+
+                  <td style="padding:12px 8px; border-bottom:1px solid var(--border);">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <div class="asp-bar-track">
+                        <div class="asp-bar-fill" style="width:80%; background:var(--pos)"></div>
+                      </div>
+                      <span
+                        style="font-size:10px; font-weight:600; font-family:'DM Mono',monospace; color:var(--pos); width:24px; text-align:right;">80%</span>
+                    </div>
+                  </td>
+
+                  <td style="padding:12px 8px; border-bottom:1px solid var(--border);">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <div class="asp-bar-track">
+                        <div class="asp-bar-fill" style="width:60%; background:var(--neg)"></div>
+                      </div>
+                      <span
+                        style="font-size:10px; font-weight:600; font-family:'DM Mono',monospace; color:var(--neg); width:24px; text-align:right;">60%</span>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- DÒNG 3: Masstel IZI T6 -->
+                <tr>
+                  <td style="padding:12px 8px; font-weight:500; font-size:12px;">Masstel IZI T6</td>
+
+                  <td style="padding:12px 8px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <div class="asp-bar-track">
+                        <div class="asp-bar-fill" style="width:80%; background:var(--pos)"></div>
+                      </div>
+                      <span
+                        style="font-size:10px; font-weight:600; font-family:'DM Mono',monospace; color:var(--pos); width:24px; text-align:right;">80%</span>
+                    </div>
+                  </td>
+
+                  <td style="padding:12px 8px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <div class="asp-bar-track">
+                        <div class="asp-bar-fill" style="width:50%; background:var(--neg)"></div>
+                      </div>
+                      <span
+                        style="font-size:10px; font-weight:600; font-family:'DM Mono',monospace; color:var(--neg); width:24px; text-align:right;">50%</span>
+                    </div>
+                  </td>
+
+                  <td style="padding:12px 8px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <div class="asp-bar-track">
+                        <div class="asp-bar-fill" style="width:60%; background:var(--neg)"></div>
+                      </div>
+                      <span
+                        style="font-size:10px; font-weight:600; font-family:'DM Mono',monospace; color:var(--neg); width:24px; text-align:right;">60%</span>
+                    </div>
+                  </td>
+
+                  <td style="padding:12px 8px;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                      <div class="asp-bar-track">
+                        <div class="asp-bar-fill" style="width:30%; background:var(--neg)"></div>
+                      </div>
+                      <span
+                        style="font-size:10px; font-weight:600; font-family:'DM Mono',monospace; color:var(--neg); width:24px; text-align:right;">30%</span>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Smart Alerts -->
+          <div class="card">
+            <div class="card-title">Cảnh báo thông minh (AI Alerts)</div>
+            <div class="smart-alerts-list">
+              <div class="alert-item"
+                style="background:var(--neg-bg); margin-bottom:10px; border-left: 3px solid var(--neg);">
+                <div class="alert-icon" style="background:transparent; font-size:18px;">⚠️</div>
+                <div class="alert-text-wrap">
+                  <div class="alert-title" style="font-size:13px; color:var(--neg)">Bàn phím Nokia 110 4G bị liệt nhanh
+                  </div>
+                  <div class="alert-desc">Phát hiện 85 đánh giá nhắc tới lỗi "liệt phím", "phím số cứng" sau 2 tuần sử
+                    dụng. Đề xuất R&D kiểm tra ngay.</div>
+                </div>
+              </div>
+              <div class="alert-item" style="background:var(--pos-bg); border-left: 3px solid var(--pos);">
+                <div class="alert-icon" style="background:transparent; font-size:18px;">💡</div>
+                <div class="alert-text-wrap">
+                  <div class="alert-title" style="font-size:13px; color:var(--pos)">Cơ hội Marketing: Pin trâu của Nokia
+                    220 4G</div>
+                  <div class="alert-desc">Khía cạnh "Pin" nhận lượng khen vượt trội. Phù hợp đẩy mạnh làm USP trong
+                    chiến dịch nhắm đến người lớn tuổi.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- TAB 2: KHÁM PHÁ (BẢN HTML GỐC ĐẦY ĐỦ)     -->
+    <!-- ========================================= -->
+    <div class="tab-content" id="content2">
+
+      <!-- SIDEBAR BẢN GỐC -->
+      <aside class="sidebar">
+        <div>
+          <div class="s-section-label">Polarity</div>
+          <div class="s-item active">
+            <div class="s-dot" style="background:#888"></div>Tất cả<span class="s-count" id="cnt-all">442</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--pos)"></div>Positive<span class="s-count" id="cnt-pos">98</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--neg)"></div>Negative<span class="s-count" id="cnt-neg">271</span>
+          </div>
+        </div>
+
+        <div class="s-divider"></div>
+
+        <div>
+          <div class="s-section-label">Aspect category</div>
+          <div class="s-item">
+            <div class="s-dot" style="background:#888"></div>Tất cả aspect
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--battery)"></div>battery<span class="s-count">118</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--general)"></div>general<span class="s-count">86</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--connectivity)"></div>connectivity<span class="s-count">69</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--speaker)"></div>speaker<span class="s-count">50</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--keyboard)"></div>keyboard<span class="s-count">33</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--warranty)"></div>warranty<span class="s-count">29</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--staff)"></div>staff_service<span class="s-count">24</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--display)"></div>display<span class="s-count">22</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:#E24B4A"></div>accessory<span class="s-count">18</span>
+          </div>
+        </div>
+
+        <div class="s-divider"></div>
+
+        <div>
+          <div class="s-section-label">Sản phẩm</div>
+          <div class="s-item">
+            <div class="s-dot" style="background:#888"></div>Tất cả
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--accent-mid)"></div>HONOR X8b<span class="s-count">48</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--accent-mid)"></div>Nokia 105 4G Pro<span
+              class="s-count">98</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--accent-mid)"></div>Nokia HMD 105<span class="s-count">72</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--accent-mid)"></div>Masstel IZI T6<span class="s-count">68</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--accent-mid)"></div>Nokia 220 4G<span class="s-count">88</span>
+          </div>
+          <div class="s-item">
+            <div class="s-dot" style="background:var(--accent-mid)"></div>Nokia 110 4G Pro<span
+              class="s-count">44</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- MAIN BẢN GỐC -->
+      <main class="main">
+        <div class="toolbar">
+          <div class="search-wrap">
+            <svg class="search-icon" width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.2" />
+              <path d="M10 10l2.5 2.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" />
+            </svg>
+            <input type="text" placeholder="Tìm kiếm câu, aspect, sản phẩm..." />
+          </div>
+          <div class="toolbar-filters">
+
+          </div>
+        </div>
+
+        <div class="metrics-row">
+          <div class="mc">
+            <div class="mc-label">Tổng đánh giá</div>
+            <div class="mc-val accent">442</div>
+            <div class="mc-sub">201 câu → 442 dòng</div>
+          </div>
+          <div class="mc">
+            <div class="mc-label">Negative rate</div>
+            <div class="mc-val red">61%<span class="mc-trend down">▲ 5%</span></div>
+            <div class="mc-sub">271 đánh giá tiêu cực</div>
+          </div>
+          <div class="mc">
+            <div class="mc-label">Positive rate</div>
+            <div class="mc-val green">22%<span class="mc-trend up">▲ 3%</span></div>
+            <div class="mc-sub">98 đánh giá tích cực</div>
+          </div>
+          <div class="mc">
+            <div class="mc-label">Aspect phổ biến nhất</div>
+            <div class="mc-val accent" style="font-size:18px">battery</div>
+            <div class="mc-sub">118 lần nhắc đến</div>
+          </div>
+        </div>
+
+        <div class="content-area">
+
+          <!-- FEED COL -->
+          <div class="feed-col-wrap">
+            <div class="feed-col">
+              <div class="feed-header">
+                <span class="feed-title">Danh sách đánh giá</span>
+                <span class="feed-count">Hiển thị 1–6 / 442</span>
+              </div>
+
+              <!-- Cards giả lập dữ liệu JSON mẫu -->
+              <div class="review-card" style="animation-delay:0.02s">
+                <div class="rc-top">
+                  <div class="rc-sentence">Điện thoại pin tụt rất nhanh, sáng sạc đầy cả ngày để đó tối về đã hết gần
+                    hết rồi</div>
+                </div>
+                <div class="rc-tags">
+                  <span class="asp-pill neg"><span class="asp-dot"></span>pin tụt · battery</span>
+                  <span class="asp-pill neg"><span class="asp-dot"></span>sạc · accessory</span>
+                  <span class="prod-pill">Nokia 105 4G Pro</span>
+                </div>
+              </div>
+              <div class="review-card" style="animation-delay:0.04s">
+                <div class="rc-top">
+                  <div class="rc-sentence">Im, sóng khỏe, NV nhiệt tình chu đáo, sản phẩm nghe gọi OK xuất sắc</div>
+                </div>
+                <div class="rc-tags">
+                  <span class="asp-pill pos"><span class="asp-dot"></span>sóng · connectivity</span>
+                  <span class="asp-pill pos"><span class="asp-dot"></span>nv · staff_service</span>
+                  <span class="asp-pill pos"><span class="asp-dot"></span>sản phẩm · general</span>
+                  <span class="prod-pill">Nokia 105 4G Pro</span>
+                </div>
+              </div>
+              <div class="review-card" style="animation-delay:0.06s">
+                <div class="rc-top">
+                  <div class="rc-sentence">Loa thoại nghe rè không nghe rõ tiếng, đổi máy mới vẫn bị</div>
+                </div>
+                <div class="rc-tags">
+                  <span class="asp-pill neg"><span class="asp-dot"></span>loa thoại · speaker</span>
+                  <span class="prod-pill">Nokia 105 4G Pro</span>
+                </div>
+              </div>
+              <div class="review-card" style="animation-delay:0.08s">
+                <div class="rc-top">
+                  <div class="rc-sentence">Rất tin tưởng khi mua đồ điện tử tại đây. Chính sách bảo hành rất tốt.</div>
+                </div>
+                <div class="rc-tags">
+                  <span class="asp-pill pos"><span class="asp-dot"></span>bảo hành · warranty</span>
+                  <span class="prod-pill">Nokia HMD 105</span>
+                </div>
+              </div>
+              <div class="review-card" style="animation-delay:0.1s">
+                <div class="rc-top">
+                  <div class="rc-sentence">Sản phẩm tốt trong tầm giá, loa thoại to rõ, pin trâu, màn hình đẹp</div>
+                </div>
+                <div class="rc-tags">
+                  <span class="asp-pill pos"><span class="asp-dot"></span>loa thoại · speaker</span>
+                  <span class="asp-pill pos"><span class="asp-dot"></span>pin · battery</span>
+                  <span class="asp-pill pos"><span class="asp-dot"></span>màn hình · display</span>
+                  <span class="prod-pill">Nokia HMD 105</span>
+                </div>
+              </div>
+              <div class="review-card" style="animation-delay:0.12s">
+                <div class="rc-top">
+                  <div class="rc-sentence">Mới dùng mấy ngày đã liệt nút bấm, rất ít dùng mà</div>
+                </div>
+                <div class="rc-tags">
+                  <span class="asp-pill neg"><span class="asp-dot"></span>phím · keyboard</span>
+                  <span class="prod-pill">Masstel IZI T6</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="pagination">
+              <span class="page-info">Trang 1 / 37</span>
+              <div class="page-btns">
+                <button class="page-btn active">1</button>
+                <button class="page-btn">2</button>
+                <button class="page-btn">3</button>
+                <span style="padding:5px 4px;font-size:11px;color:var(--text-muted)">...</span>
+                <button class="page-btn">37</button>
+                <button class="page-btn">→</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- CHART PANEL ĐẦY ĐỦ BẢN GỐC -->
+          <div class="chart-panel">
+
+            <!-- Block 1 -->
+            <div>
+              <div class="cp-title">Aspect nhắc đến nhiều nhất</div>
+              <div>
+                <div class="asp-bar-row">
+                  <div class="asp-bar-name">battery</div>
+                  <div class="asp-bar-track">
+                    <div class="asp-bar-fill" style="width:100%;background:#534AB7"></div>
+                  </div>
+                  <div class="asp-bar-val">118</div>
+                </div>
+                <div class="asp-bar-row">
+                  <div class="asp-bar-name">general</div>
+                  <div class="asp-bar-track">
+                    <div class="asp-bar-fill" style="width:73%;background:#1D9E75"></div>
+                  </div>
+                  <div class="asp-bar-val">86</div>
+                </div>
+                <div class="asp-bar-row">
+                  <div class="asp-bar-name">connectivity</div>
+                  <div class="asp-bar-track">
+                    <div class="asp-bar-fill" style="width:58%;background:#D85A30"></div>
+                  </div>
+                  <div class="asp-bar-val">69</div>
+                </div>
+                <div class="asp-bar-row">
+                  <div class="asp-bar-name">speaker</div>
+                  <div class="asp-bar-track">
+                    <div class="asp-bar-fill" style="width:42%;background:#BA7517"></div>
+                  </div>
+                  <div class="asp-bar-val">50</div>
+                </div>
+                <div class="asp-bar-row">
+                  <div class="asp-bar-name">keyboard</div>
+                  <div class="asp-bar-track">
+                    <div class="asp-bar-fill" style="width:28%;background:#D4537E"></div>
+                  </div>
+                  <div class="asp-bar-val">33</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cp-divider"></div>
+
+            <!-- Block 2 -->
+            <div>
+              <div class="cp-title">Sentiment tổng quan</div>
+              <div style="display:flex; justify-content:space-between; margin-top:8px;">
+                <span style="font-size:10px; font-weight:600; color:var(--pos)">Tích cực (28%)</span>
+                <span style="font-size:10px; font-weight:600; color:var(--neg)">Tiêu cực (72%)</span>
+              </div>
+              <div class="sentiment-stack">
+                <div style="width:28%;background:var(--pos)"></div>
+                <div style="width:72%;background:var(--neg)"></div>
+              </div>
+              <div class="sentiment-labels">
+                <span style="color:var(--pos)">28%</span>
+                <span style="color:var(--neg)">72%</span>
+              </div>
+            </div>
+
+            <div class="cp-divider"></div>
+
+            <!-- Block 3 -->
+            <div>
+              <div class="cp-title">Cần cải thiện ngay</div>
+              <div style="display:flex;flex-direction:column;gap:6px">
+                <div class="alert-item">
+                  <div class="alert-icon" style="background:var(--neg-bg);font-size:12px">⚡</div>
+                  <div class="alert-text-wrap">
+                    <div class="alert-title">battery</div>
+                    <div class="alert-desc">71% negative rate</div>
+                  </div>
+                </div>
+                <div class="alert-item">
+                  <div class="alert-icon" style="background:var(--neg-bg);font-size:12px">⌨</div>
+                  <div class="alert-text-wrap">
+                    <div class="alert-title">keyboard</div>
+                    <div class="alert-desc">91% negative rate</div>
+                  </div>
+                </div>
+                <div class="alert-item">
+                  <div class="alert-icon" style="background:var(--neg-bg);font-size:12px">📶</div>
+                  <div class="alert-text-wrap">
+                    <div class="alert-title">connectivity</div>
+                    <div class="alert-desc">70% negative rate</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="cp-divider"></div>
+
+            <!-- Block 4 -->
+            <div>
+              <div class="cp-title">Sản phẩm tốt nhất</div>
+              <div style="display:flex;flex-direction:column;gap:5px">
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span
+                    style="font-size:11px;color:var(--text-muted);width:14px;text-align:center;font-family:'DM Mono',monospace">1</span>
+                  <span
+                    style="font-size:11px;color:var(--text-secondary);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">HONOR
+                    X8b</span>
+                  <span
+                    style="font-size:11px;font-weight:500;color:var(--pos);font-family:'DM Mono',monospace">50%</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span
+                    style="font-size:11px;color:var(--text-muted);width:14px;text-align:center;font-family:'DM Mono',monospace">2</span>
+                  <span
+                    style="font-size:11px;color:var(--text-secondary);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Nokia
+                    HMD 105</span>
+                  <span
+                    style="font-size:11px;font-weight:500;color:var(--pos);font-family:'DM Mono',monospace">25%</span>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px">
+                  <span
+                    style="font-size:11px;color:var(--text-muted);width:14px;text-align:center;font-family:'DM Mono',monospace">3</span>
+                  <span
+                    style="font-size:11px;color:var(--text-secondary);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Masstel
+                    IZI</span>
+                  <span
+                    style="font-size:11px;font-weight:500;color:var(--pos);font-family:'DM Mono',monospace">21%</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- TAB 3: AI INFERENCE DEMO                  -->
+    <!-- ========================================= -->
+    <div class="tab-content" id="content3">
+      <div style="max-width: 800px; margin: 40px auto; padding: 0 20px;">
+        <div style="text-align:center; margin-bottom: 24px;">
+          <h2 style="font-size:20px; color:var(--text-primary); margin-bottom:8px;">Phân tích trực tiếp
+          </h2>
+          <p style="color:var(--text-muted); font-size:13px;">Sử dụng mô hình PhoBERT để bóc tách Aspect & Cảm xúc
+            theo thời gian thực.</p>
+        </div>
+        <div class="card" style="box-shadow: 0 4px 20px rgba(0,0,0,0.04); padding: 30px;">
+          <div style="margin-bottom:12px; color:var(--text-secondary); font-weight:500;">Nhập một câu đánh giá bất kỳ:
+          </div>
+          <textarea
+            style="width: 100%; height: 120px; padding: 16px; border: 1px solid var(--border2); border-radius: 8px; font-family: inherit; font-size: 14px; resize: none; margin-bottom: 20px; background:var(--surface2); outline:none;"
+            placeholder="Ví dụ: Điện thoại này chụp ảnh rất đẹp nhưng pin thì quá tệ, sạc mãi không đầy..."></textarea>
+          <button class="run-btn"
+            style="width: 100%; justify-content: center; padding: 12px; font-size: 14px; border-radius: 8px; background:var(--accent); color:#fff;">
+            <svg width="14" height="14" viewBox="0 0 12 12" fill="none" style="margin-right:6px;">
+              <polygon points="2,1 11,6 2,11" fill="currentColor" />
+            </svg>
+            Chạy
+          </button>
+
+          <div id="inference-result"
+            style="margin-top: 30px; border-top: 1px dashed var(--border2); padding-top: 24px; display: none;">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================= -->
+    <!-- TAB 4: QUẢN TRỊ & HỆ THỐNG                -->
+    <!-- ========================================= -->
+    <div class="tab-content" id="content4">
+      <div style="padding: 24px; max-width: 1000px; margin: 0 auto; display:flex; flex-direction:column; gap:24px;">
+
+        <div class="card">
+          <div class="card-title">Tải lên dữ liệu lớn (Batch Upload)</div>
+          <div id="upload-zone"
+            style="border: 2px dashed var(--border2); padding: 40px; text-align: center; border-radius: var(--radius); background: var(--surface2); cursor: pointer; transition: all 0.2s;">
+            <div
+              style="width:40px; height:40px; background:var(--surface); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 12px; border:1px solid var(--border);">
+              <svg width="18" height="18" viewBox="0 0 13 13" fill="none">
+                <path d="M6.5 1.5v7M4 4l2.5-3 2.5 3M1.5 10.5h10" stroke="var(--text-secondary)" stroke-width="1.3"
+                  stroke-linecap="round" />
+              </svg>
+            </div>
+            <div style="font-weight:500; font-size:14px; color:var(--text-primary);">Click để chọn file hoặc kéo thả vào
+              đây</div>
+            <div style="color:var(--text-muted); font-size:11px; margin-top:6px;">Hỗ trợ định dạng .csv, .xlsx (Tối đa
+              50,000 dòng/file)</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title">Lịch sử phân tích dữ liệu</div>
+          <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 12px;">
+            <thead>
+              <tr style="border-bottom: 1px solid var(--border); background:var(--surface2);">
+                <th style="padding: 10px; font-weight:500;">Tên file</th>
+                <th style="padding: 10px; font-weight:500;">Ngày tải</th>
+                <th style="padding: 10px; font-weight:500;">Số dòng</th>
+                <th style="padding: 10px; font-weight:500;">Trạng thái</th>
+                <th style="padding: 10px; font-weight:500;">Hành động</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr style="border-bottom: 1px solid var(--border);">
+                <td style="padding: 12px 10px; font-weight: 500;">shopee_reviews_june.xlsx</td>
+                <td style="padding: 12px 10px; color:var(--text-secondary);">12/06/2024</td>
+                <td style="padding: 12px 10px; font-family:'DM Mono',monospace; font-size:11px;">5,200</td>
+                <td style="padding: 12px 10px;"><span class="asp-pill pos">Hoàn thành</span></td>
+                <td style="padding: 12px 10px;"><a href="#"
+                    style="color:var(--accent-mid); text-decoration:none; font-weight:500;">Xem chi tiết →</a></td>
+              </tr>
+              <tr>
+                <td style="padding: 12px 10px; font-weight: 500;">tiki_electronics_july.csv</td>
+                <td style="padding: 12px 10px; color:var(--text-secondary);">Hôm nay</td>
+                <td style="padding: 12px 10px; font-family:'DM Mono',monospace; font-size:11px;">12,800</td>
+                <td style="padding: 12px 10px;"><span class="asp-pill"
+                    style="background:var(--accent-light); color:var(--accent-mid);">Đang phân tích (45%)</span>
+                </td>
+                <td style="padding: 12px 10px; color:var(--text-muted);">-</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</body>
+
+</html>

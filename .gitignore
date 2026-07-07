@@ -1,0 +1,10 @@
+ate_phobert/
+asc_phobert/
+cache_data/
+dashboard_component/
+__pycache__/
+*.pyc
+.env
+1.DataRaw/
+2.ProcessingData/
+3.Model/
