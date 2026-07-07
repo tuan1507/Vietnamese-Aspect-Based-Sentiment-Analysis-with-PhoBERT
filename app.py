@@ -9,7 +9,32 @@ import streamlit.components.v1 as components
 import time
 import re
 
-# ── absa package: business logic đã tách module ──────────────────────────────
+
+def _ensure_models_downloaded():
+    from pathlib import Path
+    ate_ok = any(Path("ate_phobert").rglob("model.safetensors"))
+    asc_ok = any(Path("asc_phobert").rglob("model.safetensors"))
+    if ate_ok and asc_ok:
+        return
+    import streamlit as _st
+    _st.info("⏳ Đang tải model từ HuggingFace Hub (chỉ lần đầu)...")
+    from huggingface_hub import snapshot_download
+    if not ate_ok:
+        snapshot_download(
+            repo_id="Naut1507/PhoBert_Vi_ATE",
+            local_dir="ate_phobert/phobert_ate_v3/best_model",
+            local_dir_use_symlinks=False
+        )
+    if not asc_ok:
+        snapshot_download(
+            repo_id="Naut1507/PhoBert_Vi_ASC",
+            local_dir="asc_phobert/asc_phobert/best_model",
+            local_dir_use_symlinks=False
+        )
+    _st.rerun()
+
+_ensure_models_downloaded()
+# ── absa package: business logic đã tách module 
 from absa import (
     BASE_DIR, CACHE_DIR, HTML_TEMPLATE, COMP_DIR,
     load_models, phan_tich_batch, phan_tich_ai_that,

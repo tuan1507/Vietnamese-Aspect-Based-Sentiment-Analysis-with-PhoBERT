@@ -1,3 +1,15 @@
+
+---
+title: ABSA Analyzer
+colorFrom: blue
+colorTo: purple
+sdk: streamlit
+sdk_version: 1.32.0
+app_file: app.py
+pinned: false
+license: mit
+---
+
 # ABSA Analyzer
 
 Hệ thống phân tích cảm xúc đa khía cạnh (Aspect-Based Sentiment Analysis)
