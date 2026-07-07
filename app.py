@@ -40,7 +40,7 @@ _ensure_models_downloaded()
 from absa import (
     BASE_DIR, CACHE_DIR, HTML_TEMPLATE, COMP_DIR,
     load_models, phan_tich_batch, phan_tich_ai_that,
-    ASPECT_CATEGORIES, is_valid_category,
+    ASPECT_CATEGORIES, is_valid_ASPECT_CATEGORIES,
     preprocess_text, file_md5, ensure_dirs,
     build_json_for_html, inject_html_data,
 )
