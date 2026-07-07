@@ -113,7 +113,7 @@ if 'analyzed_df' not in st.session_state:
             # sạch (VD "Pin & Sạc") — sinh bởi normalize_aspect(). Nếu là aspect
             # thô cũ ("pin", "màn hình", "bin"…) → cache stale, xoá và phân
             # tích lại.
-            if is_valid_category(cached_df.get('Khía cạnh (Aspect)',
+            if is_valid_ASPECT_CATEGORIES(cached_df.get('Khía cạnh (Aspect)',
                                                 pd.Series([], dtype=str)).dropna().unique()):
                 st.session_state.analyzed_df = cached_df
                 if os.path.exists(hist_path):
@@ -717,7 +717,7 @@ else:
                     try:
                         loaded_df = pd.read_csv(target_csv)
                         # Validate cùng schema với DataFrame hiện tại
-                        if is_valid_category(loaded_df.get('Khía cạnh (Aspect)',
+                        if is_valid_ASPECT_CATEGORIES(loaded_df.get('Khía cạnh (Aspect)',
                                                           pd.Series([], dtype=str)).dropna().unique()):
                             st.session_state.analyzed_df = loaded_df
                             # Đồng bộ vào cache mặc định để F5 tự nạp lại đúng file này
