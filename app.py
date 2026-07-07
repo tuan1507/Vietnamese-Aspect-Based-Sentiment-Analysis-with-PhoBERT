@@ -9,36 +9,38 @@ import streamlit.components.v1 as components
 import time
 import re
 
-
+# ── AUTO-DOWNLOAD MODEL NẾU CHƯA CÓ (cho HuggingFace Spaces + user mới clone) ──
 def _ensure_models_downloaded():
+    """Tải model từ HF Hub nếu chưa có. Chạy 1 lần lúc khởi động."""
     from pathlib import Path
     ate_ok = any(Path("ate_phobert").rglob("model.safetensors"))
     asc_ok = any(Path("asc_phobert").rglob("model.safetensors"))
     if ate_ok and asc_ok:
-        return
+        return   # đã có đủ, bỏ qua
     import streamlit as _st
-    _st.info("⏳ Đang tải model từ HuggingFace Hub (chỉ lần đầu)...")
+    _st.info("⏳ Đang tải model từ HuggingFace Hub (chỉ lần đầu, mất vài phút)...")
     from huggingface_hub import snapshot_download
     if not ate_ok:
         snapshot_download(
             repo_id="Naut1507/PhoBert_Vi_ATE",
             local_dir="ate_phobert/phobert_ate_v3/best_model",
-            local_dir_use_symlinks=False
+            local_dir_use_symlinks=False,
         )
     if not asc_ok:
         snapshot_download(
             repo_id="Naut1507/PhoBert_Vi_ASC",
             local_dir="asc_phobert/asc_phobert/best_model",
-            local_dir_use_symlinks=False
+            local_dir_use_symlinks=False,
         )
     _st.rerun()
 
 _ensure_models_downloaded()
-# ── absa package: business logic đã tách module 
+
+# ── absa package: business logic đã tách module ──────────────────────────────
 from absa import (
     BASE_DIR, CACHE_DIR, HTML_TEMPLATE, COMP_DIR,
     load_models, phan_tich_batch, phan_tich_ai_that,
-    ASPECT_CATEGORIES, is_valid_ASPECT_CATEGORIES,
+    ASPECT_CATEGORIES, is_valid_category,
     preprocess_text, file_md5, ensure_dirs,
     build_json_for_html, inject_html_data,
 )
@@ -111,7 +113,7 @@ if 'analyzed_df' not in st.session_state:
             # sạch (VD "Pin & Sạc") — sinh bởi normalize_aspect(). Nếu là aspect
             # thô cũ ("pin", "màn hình", "bin"…) → cache stale, xoá và phân
             # tích lại.
-            if is_valid_taxonomy(cached_df.get('Khía cạnh (Aspect)',
+            if is_valid_category(cached_df.get('Khía cạnh (Aspect)',
                                                 pd.Series([], dtype=str)).dropna().unique()):
                 st.session_state.analyzed_df = cached_df
                 if os.path.exists(hist_path):
@@ -437,7 +439,7 @@ if st.session_state.analyzed_df is None:
 <div class="feature-icon" style="background-color: rgba(47, 145, 242, 0.25); color: #e0f2fe; font-weight: bold; box-shadow: 0 4px 10px rgba(47, 145, 242, 0.15);">⚡</div>
 <div class="feature-text">
 <h4>Công nghệ Deep Learning</h4>
-<p>Tích hợp mô hình ngôn ngữ lớn XLM-RoBERTa được huấn luyện và tinh chỉnh tối ưu cho tiếng Việt.</p>
+<p>Tích hợp mô hình ngôn ngữ lớn được huấn luyện và tinh chỉnh tối ưu cho tiếng Việt.</p>
 </div>
 </div>
 </div>
@@ -715,7 +717,7 @@ else:
                     try:
                         loaded_df = pd.read_csv(target_csv)
                         # Validate cùng schema với DataFrame hiện tại
-                        if is_valid_taxonomy(loaded_df.get('Khía cạnh (Aspect)',
+                        if is_valid_category(loaded_df.get('Khía cạnh (Aspect)',
                                                           pd.Series([], dtype=str)).dropna().unique()):
                             st.session_state.analyzed_df = loaded_df
                             # Đồng bộ vào cache mặc định để F5 tự nạp lại đúng file này
