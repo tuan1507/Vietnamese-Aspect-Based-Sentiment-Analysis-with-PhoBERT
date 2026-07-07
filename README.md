@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 
 ---
 title: ABSA Analyzer
@@ -86,3 +87,25 @@ from absa import (
     build_json_for_html, inject_html_data,
 )
 ```
+=======
+---
+title: Absa Analyzer
+emoji: 🚀
+colorFrom: red
+colorTo: red
+sdk: docker
+app_port: 8501
+tags:
+- streamlit
+pinned: false
+short_description: Streamlit template space
+license: mit
+---
+
+# Welcome to Streamlit!
+
+Edit `/src/streamlit_app.py` to customize this app to your heart's desire. :heart:
+
+If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
+forums](https://discuss.streamlit.io).
+>>>>>>> e15969ec1dc9cbb265024081494440f083c61f2c
