@@ -1,111 +1,57 @@
-<<<<<<< HEAD
-
 ---
-title: ABSA Analyzer
+title: Absa Analyzer
 colorFrom: blue
 colorTo: purple
-sdk: streamlit
-sdk_version: 1.32.0
+sdk: docker
+app_port: 8501
 app_file: app.py
 pinned: false
 license: mit
 ---
 
-# ABSA Analyzer
+# ABSA Analyzer — Vietnamese Aspect-Based Sentiment Analysis
 
-Hệ thống phân tích cảm xúc đa khía cạnh (Aspect-Based Sentiment Analysis)
-cho tiếng Việt, dựa trên PhoBERT.
+> Hệ thống phân tích cảm xúc đa khía cạnh cho tiếng Việt, xây trên PhoBERT.
 
-## Cấu trúc thư mục
-
-```
-1.DACN3/
-├── app.py                  # Streamlit entrypoint (~730 dòng)
-├── index.html              # Template dashboard
-├── .streamlit/
-│   └── config.toml         # Ép Streamlit dùng light theme
-├── absa/                   # Package business logic (import từ đây)
-│   ├── __init__.py         # Public API
-│   ├── utils.py            # Đường dẫn + preprocess + hash
-│   ├── taxonomy.py         # 13 danh mục + normalize + fuzzy fallback
-│   ├── models.py           # Load PhoBERT + dò weight/tokenizer
-│   ├── inference.py        # Batch ATE + Batch ASC + FP16 autocast
-│   └── dashboard.py        # Build JSON + inject HTML (có @st.cache_data)
-├── ate_phobert/            # Weight model ATE (bạn để sẵn)
-├── asc_phobert/            # Weight model ASC (bạn để sẵn)
-├── dashboard_component/    # Streamlit component dir (tự tạo)
-└── cache_data/             # Cache DataFrame kết quả (tự tạo)
-```
-
-## Chạy
+## Quick Start
 
 ```bash
-cd 1.DACN3
+git clone https://github.com/tuan1507/Vietnamese-Aspect-Based-Sentiment-Analysis-with-PhoBERT.git
+cd Vietnamese-Aspect-Based-Sentiment-Analysis-with-PhoBERT
+pip install -r requirements.txt
+python scripts/download_models.py
 streamlit run app.py
 ```
 
-## Tối ưu chính so với bản cũ
+## 🏗 Architecture
 
-| Vấn đề | Bản cũ | Bản mới |
-|---|---|---|
-| **Tốc độ inference** | Vòng lặp 1-1, GPU 22% | Batch 32, FP16 autocast, GPU 80-95% |
-| **Load dashboard** | Tính lại DataFrame mỗi F5 | `@st.cache_data` — cache hit <10ms |
-| **Aspect ngoài từ điển** | Drop luôn | Fuzzy fallback (Levenshtein, cached LRU 4096) |
-| **Từ generic ("máy", "điện thoại")** | Sang danh mục chung chung | Blacklist → drop khỏi analytics |
-| **Tổ chức code** | 1 file 2240 dòng | app.py 730 + 5 module rõ vai trò |
-
-Ước tính:
-- **4,246 dòng CSV**: ~15-25 phút → **30-60 giây**
-- **VRAM peak**: ~500MB → ~2-3 GB (thoải mái với 5060 Ti 16GB)
-
-## Extending taxonomy (khi có domain mới)
-
-Sửa `absa/taxonomy.py`:
-
-```python
-ASPECT_TAXONOMY = {
-    "Danh mục mới": (
-        "keyword 1", "keyword 2", ...,
-    ),
-    # ...
-}
+```
+app.py                  # Streamlit entrypoint
+index.html              # Dashboard template
+absa/
+├── __init__.py         # Public API
+├── utils.py            # Paths, preprocess, hash
+├── aspect_category.py  # 13 categories + fuzzy normalize
+├── models.py           # Load PhoBERT + resolvers
+├── inference.py        # Batch ATE + Batch ASC + FP16
+└── dashboard.py        # Build JSON + inject HTML
+scripts/
+└── download_models.py  # Tải model từ HuggingFace Hub
 ```
 
-Fuzzy matching sẽ tự động bắt các typo/biến thể (`cammera` → `camera`).
-Nếu thấy generic term không muốn phân loại, thêm vào `_GENERIC_BLACKLIST`.
+## ✨ Features
 
-## Public API
+- 🎯 **2 mô hình PhoBERT-base** fine-tune cho ATE + ASC
+- 📊 **Dashboard tương tác** — biểu đồ cảm xúc theo sản phẩm, khía cạnh
+- 🧠 **13 danh mục aspect** + fuzzy fallback cho từ mới/typo
+- ⚡ **Batch inference GPU** — 4,000 dòng CSV trong ~1 phút
+- 🎨 **UI light theme** — ổn định trên mọi chế độ trình duyệt
 
-Import từ `absa`:
+##  Models
 
-```python
-from absa import (
-    BASE_DIR, CACHE_DIR, HTML_TEMPLATE, COMP_DIR,
-    load_models, phan_tich_batch, phan_tich_ai_that,
-    ASPECT_TAXONOMY, is_valid_taxonomy,
-    preprocess_text, file_md5, ensure_dirs,
-    build_json_for_html, inject_html_data,
-)
-```
-=======
----
-title: Absa Analyzer
-emoji: 🚀
-colorFrom: red
-colorTo: red
-sdk: docker
-app_port: 8501
-tags:
-- streamlit
-pinned: false
-short_description: Streamlit template space
-license: mit
----
+- **ATE**: [Naut1507/PhoBert_Vi_ATE](https://huggingface.co/Naut1507/PhoBert_Vi_ATE)
+- **ASC**: [Naut1507/PhoBert_Vi_ASC](https://huggingface.co/Naut1507/PhoBert_Vi_ASC)
 
-# Welcome to Streamlit!
+## 📄 License
 
-Edit `/src/streamlit_app.py` to customize this app to your heart's desire. :heart:
-
-If you have any questions, checkout our [documentation](https://docs.streamlit.io) and [community
-forums](https://discuss.streamlit.io).
->>>>>>> e15969ec1dc9cbb265024081494440f083c61f2c
+MIT
