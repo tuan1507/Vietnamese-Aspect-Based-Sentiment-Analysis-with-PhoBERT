@@ -54,4 +54,13 @@ scripts/
 
 ## 📄 License
 
+## Dùng thử
+
+1. Mở [Live Demo](https://huggingface.co/spaces/Naut1507/Absa-Analyzer)
+2. Upload file → chọn cột văn bản → bấm Chạy Phân tích
+3. Xem dashboard kết quả
+
+> ⚠️ Demo chạy trên CPU free tier — nên dùng file <200 dòng để kết quả nhanh.
+> Với file lớn, clone repo và chạy local với GPU.
+
 MIT
