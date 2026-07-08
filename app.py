@@ -9,7 +9,6 @@ import streamlit.components.v1 as components
 import time
 import re
 
-# ── AUTO-DOWNLOAD MODEL NẾU CHƯA CÓ (cho HuggingFace Spaces + user mới clone) ──
 def _ensure_models_downloaded():
     """Tải model từ HF Hub nếu chưa có. Chạy 1 lần lúc khởi động."""
     from pathlib import Path
@@ -57,13 +56,8 @@ if st.query_params.get("reset") == "true":
     st.rerun()
 
 
-# ── Load model 1 lần cho cả process (Streamlit cache_resource) ───────────────
 @st.cache_resource(show_spinner="Đang nạp mô hình PhoBERT...")
 def _get_models():
-    """
-    Nạp model ATE + ASC vào GPU (nếu có) đúng 1 lần trong đời sống process.
-    Nếu thất bại (thiếu file weight/tokenizer) → hiện thông báo chẩn đoán.
-    """
     try:
         return load_models()
     except FileNotFoundError as e:
@@ -90,7 +84,6 @@ if 'upload_history' not in st.session_state:
 
 @st.cache_resource
 def clear_cache_on_startup():
-    # Chỉ chạy đúng 1 lần khi server Streamlit vừa khởi động (chạy lại lệnh streamlit)
     if os.path.exists(CACHE_DIR):
         try:
             shutil.rmtree(CACHE_DIR)
@@ -108,11 +101,6 @@ if 'analyzed_df' not in st.session_state:
     if os.path.exists(csv_path):
         try:
             cached_df = pd.read_csv(csv_path)
-            # ── CACHE VERSION CHECK ──────────────────────────────────────────
-            # Cache hợp lệ chỉ khi cột 'Khía cạnh (Aspect)' chứa TÊN DANH MỤC
-            # sạch (VD "Pin & Sạc") — sinh bởi normalize_aspect(). Nếu là aspect
-            # thô cũ ("pin", "màn hình", "bin"…) → cache stale, xoá và phân
-            # tích lại.
             if is_valid_ASPECT_CATEGORIES(cached_df.get('Khía cạnh (Aspect)',
                                                 pd.Series([], dtype=str)).dropna().unique()):
                 st.session_state.analyzed_df = cached_df
@@ -130,282 +118,14 @@ if 'analyzed_df' not in st.session_state:
         except Exception:
             pass
 if st.session_state.analyzed_df is None:
-    # Thiết lập giao diện hiện đại, chuyên nghiệp đồng bộ với CSS của Dashboard chính
-    st.markdown("""
-        <style>
-            /* Ẩn các thành phần mặc định của Streamlit */
-            [data-testid="stSidebar"] { display: none !important; }
-            [data-testid="stHeader"] { background: transparent !important; }
-            footer { display: none !important; }
-            
-            /* Cấu hình màu nền chính và font chữ */
-            body, [data-testid="stAppViewContainer"] {
-                background-color: #F4F2EE !important;
-                font-family: 'DM Sans', sans-serif !important;
-            }
-            
-            /* Điều chỉnh khoảng cách block container */
-            .block-container { 
-                max-width: 1100px !important; 
-                padding-top: 6vh !important; 
-                padding-bottom: 6vh !important; 
-            }
-            
-            /* Style cho cột bên trái: Panel giới thiệu thông tin */
-            .info-panel {
-                background-color: #2f91f2;
-                color: #ffffff;
-                padding: 40px;
-                border-radius: 20px;
-                box-shadow: 0 12px 30px rgba(97, 89, 183, 0.15);
-                height: 100%;
-                min-height: 550px;
-                display: flex;
-                flex-direction: column;
-                justify-content: space-between;
-            }
-            
-            .logo-area {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                margin-bottom: 25px;
-            }
-            
-            .logo-icon {
-                font-size: 24px;
-            }
-            
-            .logo-title {
-                font-size: 13px;
-                font-weight: 700;
-                letter-spacing: 1px;
-                color: rgba(255, 255, 255, 0.85);
-            }
-            
-            .info-title {
-                font-size: 2.2rem;
-                font-weight: 700;
-                line-height: 1.25;
-                margin-bottom: 12px;
-                letter-spacing: -0.5px;
-                color: #ffffff;
-            }
-            
-            .info-subtitle {
-                font-size: 0.95rem;
-                opacity: 0.85;
-                margin-bottom: 35px;
-                line-height: 1.5;
-            }
-            
-            .feature-item {
-                display: flex;
-                gap: 15px;
-                margin-bottom: 20px;
-                align-items: flex-start;
-            }
-            
-            .feature-icon {
-                width: 38px;
-                height: 38px;
-                border-radius: 10px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 18px;
-                flex-shrink: 0;
-            }
-            
-            .feature-text h4 {
-                font-size: 0.95rem;
-                font-weight: 600;
-                margin-bottom: 4px;
-                color: #ffffff;
-            }
-            
-            .feature-text p {
-                font-size: 0.85rem;
-                opacity: 0.8;
-                line-height: 1.4;
-                margin: 0;
-            }
-            
-            .tech-badges {
-                display: flex;
-                gap: 8px;
-                flex-wrap: wrap;
-                margin-top: 25px;
-                padding-top: 20px;
-                border-top: 1px solid rgba(255, 255, 255, 0.12);
-            }
-            
-            .tech-badge {
-                background: rgba(255, 255, 255, 0.1);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                padding: 4px 10px;
-                border-radius: 20px;
-                font-size: 0.72rem;
-                font-weight: 500;
-                color: #ffffff;
-            }
+    # Đọc CSS upload page từ file static (không nhúng CSS cứng vào app.py)
+    _upload_css = open(
+        os.path.join(BASE_DIR, "absa", "static", "css", "upload.css"), encoding="utf-8"
+    ).read()
+    st.markdown(f"<style>{_upload_css}</style>", unsafe_allow_html=True)
 
-            /* Style cho cột bên phải: Card cấu hình tải tệp */
-            div[data-testid="column"]:nth-of-type(2) {
-                background: #ffffff !important;
-                border: 1px solid rgba(0, 0, 0, 0.05) !important;
-                border-radius: 20px !important;
-                padding: 40px !important;
-                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.03) !important;
-                display: flex;
-                flex-direction: column;
-                justify-content: flex-start;
-                min-height: 550px;
-            }
+    col1, col2 = st.columns([1.1, 1.0], gap="large")
             
-            .upload-card-header {
-                margin-bottom: 25px;
-            }
-            
-            .upload-card-title {
-                font-size: 1.5rem;
-                font-weight: 700;
-                color: #1A1816;
-                margin-bottom: 6px;
-                letter-spacing: -0.3px;
-            }
-            
-            .upload-card-sub {
-                font-size: 0.88rem;
-                color: #5A5650;
-                line-height: 1.4;
-            }
-
-            /* Tùy chỉnh vùng kéo thả file */
-            div[data-testid="stFileUploader"] {
-                padding: 0 !important;
-                margin-bottom: 15px;
-            }
-            
-            div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"] {
-                border: 2px dashed #6159b7 !important;
-                background-color: #fcfbfe !important;
-                border-radius: 12px !important;
-                padding: 24px !important;
-                transition: all 0.25s ease !important;
-            }
-            
-            div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"]:hover {
-                background-color: #f6f5fc !important;
-                border-color: #2f91f2 !important;
-            }
-            
-            div[data-testid="stFileUploader"] label[data-testid="stWidgetLabel"] {
-                display: none !important;
-            }
-
-            /* Biểu tượng tải lên có hiệu ứng di chuột nhẹ */
-            div[data-testid="stFileUploader"] svg {
-                color: #6159b7 !important;
-                transform: scale(1.1);
-                transition: transform 0.2s ease;
-            }
-            div[data-testid="stFileUploader"] section[data-testid="stFileUploaderDropzone"]:hover svg {
-                transform: scale(1.2) translateY(-2px);
-            }
-
-            /* Kiểu dáng cho các Dropdown chọn cột */
-            div[data-testid="stSelectbox"] {
-                margin-bottom: 15px !important;
-            }
-
-            div[data-testid="stSelectbox"] label[data-testid="stWidgetLabel"] p {
-                color: #5A5650 !important;
-                font-weight: 600 !important;
-                font-size: 0.85rem !important;
-                margin-bottom: 6px !important;
-            }
-            
-            /* ── Selectbox: giữ TRẮNG-ĐEN dù trình duyệt để dark mode ─────── */
-            /* Container ngoài của baseweb select */
-            div[data-testid="stSelectbox"] div[data-baseweb="select"],
-            div[data-testid="stSelectbox"] div[data-baseweb="select"] > div {
-                border-radius: 10px !important;
-                background-color: #ffffff !important;
-                color: #1e293b !important;
-                border: 1px solid #e2e8f0 !important;
-            }
-            /* Text hiển thị giá trị đang chọn */
-            div[data-testid="stSelectbox"] div[data-baseweb="select"] div,
-            div[data-testid="stSelectbox"] div[data-baseweb="select"] input,
-            div[data-testid="stSelectbox"] div[data-baseweb="select"] span {
-                color: #1e293b !important;
-                background-color: transparent !important;
-            }
-            /* Placeholder khi chưa chọn */
-            div[data-testid="stSelectbox"] div[data-baseweb="select"] [class*="placeholder"] {
-                color: #64748b !important;
-            }
-            /* Popover / danh sách bung ra khi click */
-            div[data-baseweb="popover"],
-            div[data-baseweb="popover"] div,
-            ul[role="listbox"],
-            ul[role="listbox"] li,
-            li[role="option"] {
-                background-color: #ffffff !important;
-                color: #1e293b !important;
-            }
-            li[role="option"]:hover,
-            li[role="option"][aria-selected="true"] {
-                background-color: #f1f5f9 !important;
-                color: #1e293b !important;
-            }
-            /* Text input (nếu có ở các tab khác) — cùng phong cách */
-            div[data-testid="stTextInput"] input,
-            div[data-testid="stTextArea"] textarea {
-                background-color: #ffffff !important;
-                color: #1e293b !important;
-                border: 1px solid #e2e8f0 !important;
-                border-radius: 10px !important;
-            }
-            
-            /* Tùy chỉnh nút Phân tích */
-            div.stButton button[kind="primary"] {
-                background-color: #6159b7 !important;
-                color: #ffffff !important;
-                font-weight: 600 !important;
-                font-size: 0.95rem !important;
-                border: none !important;
-                border-radius: 10px !important;
-                padding: 12px 24px !important;
-                width: 100% !important;
-                box-shadow: 0 6px 15px rgba(97, 89, 183, 0.2) !important;
-                transition: all 0.2s ease !important;
-                margin-top: 10px;
-            }
-            
-            div.stButton button[kind="primary"]:hover {
-                transform: translateY(-1px) !important;
-                box-shadow: 0 10px 22px rgba(97, 89, 183, 0.3) !important;
-                background-color: #524ab7 !important;
-            }
-
-            /* Styling cho thông báo của Streamlit */
-            div[data-testid="stAlert"] {
-                background-color: #ecfdf5 !important;
-                border: 1px solid #a7f3d0 !important;
-                border-radius: 10px !important;
-                padding: 10px 14px !important;
-                margin-bottom: 15px !important;
-            }
-            div[data-testid="stAlert"] [data-testid="stMarkdownContainer"] p {
-                color: #065f46 !important;
-                font-weight: 500 !important;
-                font-size: 0.85rem !important;
-                margin: 0 !important;
-            }
-        </style>
-    """, unsafe_allow_html=True)
     
     col1, col2 = st.columns([1.1, 1.0], gap="large")
     
@@ -583,23 +303,11 @@ if st.session_state.analyzed_df is None:
                         else:
                             st.warning("⚠️ AI không tìm thấy khía cạnh nào trong tập dữ liệu.")
 else:
-    # Ẩn HOÀN TOÀN các thành phần mặc định của Streamlit để hiển thị chuẩn 100% giao diện HTML
-    st.markdown("""
-        <style>
-            [data-testid="stSidebar"] { display: none !important; }
-            [data-testid="collapsedControl"] { display: none !important; }
-            [data-testid="stHeader"] { display: none !important; }
-            footer { display: none !important; }
-            .block-container { 
-                padding-top: 0rem !important; 
-                padding-bottom: 0rem !important; 
-                padding-left: 0rem !important; 
-                padding-right: 0rem !important; 
-                max-width: 100% !important; 
-            }
-            iframe { border: none !important; }
-        </style>
-    """, unsafe_allow_html=True)
+    # Đọc CSS phủ khi dashboard nhúng vào Streamlit iframe
+    _iframe_css = open(
+        os.path.join(BASE_DIR, "absa", "static", "css", "dashboard_iframe.css"), encoding="utf-8"
+    ).read()
+    st.markdown(f"<style>{_iframe_css}</style>", unsafe_allow_html=True)
     
     json_data = build_json_for_html(st.session_state.analyzed_df)
 
@@ -619,14 +327,7 @@ else:
         del st.session_state["pending_tab"]
     json_data = json.dumps(parsed_json, ensure_ascii=False)
 
-    # ── Đường dẫn HTML: neo theo BASE_DIR ─────────────────────────────────────
-    # Template ưu tiên đọc từ THƯ MỤC GỐC (BASE_DIR/index.html); nếu không có
-    # thì fallback về BASE_DIR/dashboard_component/index.html (bố cục cũ).
-    # File render sau khi tiêm được ghi ra BASE_DIR/dashboard_component/index.html
-    # để Streamlit component nạp.
-    # Đường dẫn HTML template ưu tiên BASE_DIR/index.html (thư mục gốc project),
-    # fallback về COMP_DIR/index.html cho bố cục cũ. File render output luôn ghi
-    # vào COMP_DIR/index.html để Streamlit component nạp.
+    # ── Đường dẫn HTML template: đọc từ main_dasboard/dashboard.html ────────
     root_template = HTML_TEMPLATE
     comp_dir      = COMP_DIR
     comp_template = os.path.join(comp_dir, "index.html")

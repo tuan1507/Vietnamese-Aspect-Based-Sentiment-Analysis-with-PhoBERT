@@ -1,10 +1,28 @@
+# ── Model weights (lưu trên HuggingFace, không commit vào git) ──
 ate_phobert/
 asc_phobert/
+
+# ── File tự sinh ra khi chạy app ──
+output/
 cache_data/
 dashboard_component/
+
+# ── Python ──
 __pycache__/
 *.pyc
+*.pyo
 .env
+venv/
+.venv/
+
+# ── Data thô (thường nặng, không cần commit) ──
 1.DataRaw/
 2.ProcessingData/
 3.Model/
+
+# ── VS Code ──
+.vscode/
+
+# ── OS ──
+.DS_Store
+Thumbs.db

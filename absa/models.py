@@ -21,7 +21,6 @@ logging.getLogger("transformers.tokenization_utils_base").setLevel(logging.ERROR
 warnings.filterwarnings("ignore", category=UserWarning,  module="transformers")
 warnings.filterwarnings("ignore", category=FutureWarning, module="transformers")
 
-# ── Hyperparams & label maps (khớp CHÍNH XÁC với notebook train) ─────────────
 ATE_MAX_LEN  = 128
 ASC_MAX_LEN  = 128
 ATE_ID2LABEL = {0: "O", 1: "B-ASP", 2: "I-ASP"}
@@ -50,7 +49,6 @@ def _has_tokenizer(d: str) -> bool:
 
 
 def _find_dir(root: str, ok, what: str) -> str:
-    """Dò thư mục con của root thoả ok(). Ưu tiên best_model → checkpoint-* → nông nhất."""
     if not os.path.isdir(root):
         raise FileNotFoundError(f"Không tìm thấy thư mục: {root}")
     if ok(root):
@@ -94,13 +92,6 @@ def load_models():
     """
     Load 2 mô hình PhoBERT (ATE + ASC) lên RAM/GPU.
 
-    Returns:
-        dict với các khoá:
-          ate_tokenizer, ate_model, asc_tokenizer, asc_model,
-          device, use_amp, ate_is_fast, asc_is_fast
-
-    Raises:
-        FileNotFoundError nếu thư mục weight/tokenizer thiếu.
     """
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     use_amp = (device.type == "cuda")   # bật autocast FP16 khi có CUDA

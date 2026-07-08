@@ -1,20 +1,17 @@
-
 import os
 import re
 import hashlib
 import unicodedata
 
-# ── Đường dẫn (neo theo vị trí file absa/utils.py để chạy được từ cwd bất kỳ) ──
-# BASE_DIR là thư mục cha của package absa/ — chính là project root (nơi chứa app.py).
 BASE_DIR      = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CACHE_DIR     = os.path.join(BASE_DIR, "cache_data")
-COMP_DIR      = os.path.join(BASE_DIR, "dashboard_component")
-HTML_TEMPLATE = os.path.join(BASE_DIR, "index.html")   # template gốc
-HTML_OUTPUT   = os.path.join(COMP_DIR, "index.html")    # file render inject vào
+COMP_DIR      = os.path.join(BASE_DIR, "output", "dashboard_component")
+HTML_TEMPLATE = os.path.join(BASE_DIR, "main_dasboard", "dashboard.html")  # template gốc
+HTML_OUTPUT   = os.path.join(COMP_DIR, "index.html")                       # file render inject vào
 
 
 def ensure_dirs():
-    """Tạo cache_data/ và dashboard_component/ nếu chưa có."""
+    """Tạo cache_data/ và output/dashboard_component/ nếu chưa có."""
     for d in (CACHE_DIR, COMP_DIR):
         if not os.path.isdir(d):
             os.makedirs(d, exist_ok=True)

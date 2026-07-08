@@ -193,8 +193,6 @@ def phan_tich_batch(texts, batch_size: int = 32, progress_cb=None):
                 polarity_vn = "🟢 Tích cực"
             elif label == "negative":
                 polarity_vn = "🔴 Tiêu cực"
-            else:
-                polarity_vn = "⚪ Trung tính"
             all_results[orig_i].append({
                 "Khía cạnh (Aspect)": cat,
                 "Aspect gốc":         disp,

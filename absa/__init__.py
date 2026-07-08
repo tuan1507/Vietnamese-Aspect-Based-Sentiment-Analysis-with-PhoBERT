@@ -1,6 +1,6 @@
 from .models import load_models
 from .inference import phan_tich_batch, phan_tich_ai_that, warmup
-from .dashboard import build_json_for_html, inject_html_data
+from .data_builder import build_json_for_html, inject_html_data
 
 from .utils import (
     BASE_DIR, CACHE_DIR, HTML_TEMPLATE, COMP_DIR,
