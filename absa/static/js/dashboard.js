@@ -367,7 +367,6 @@ const DATA = __JSON_DATA__;
         
         if(feedCol && sidebar) {
             window.dashboardFilter = {
-                polarity: 'Tất cả',
                 aspect: 'Tất cả aspect',
                 product: 'Tất cả',
                 searchQuery: ''
@@ -381,16 +380,10 @@ const DATA = __JSON_DATA__;
                 });
             }
             
-            let polCounts = { pos: 0, neg: 0 };
             let aspCounts = {};
             let prodCounts = {};
             
             DATA.feed.forEach(f => {
-                let hasPos = f.tags.some(t => t.polarity === 'pos');
-                let hasNeg = f.tags.some(t => t.polarity === 'neg');
-                if (hasPos) polCounts.pos++;
-                if (hasNeg) polCounts.neg++;
-                
                 prodCounts[f.product] = (prodCounts[f.product] || 0) + 1;
                 
                 let uniqueAspects = new Set(f.tags.map(t => t.aspect));
@@ -407,22 +400,6 @@ const DATA = __JSON_DATA__;
             }
 
             window.renderSidebar = function() {
-                let polHtml = `
-                    <div>
-                        <div class="s-section-label">Polarity</div>
-                        <div class="s-item ${window.dashboardFilter.polarity === 'Tất cả' ? 'active' : ''}" data-cat="polarity" data-val="Tất cả">
-                            <div class="s-dot" style="background:#888"></div>Tất cả<span class="s-count">${DATA.feed.length}</span>
-                        </div>
-                        <div class="s-item ${window.dashboardFilter.polarity === 'Positive' ? 'active' : ''}" data-cat="polarity" data-val="Positive">
-                            <div class="s-dot" style="background:var(--pos)"></div>Positive<span class="s-count">${polCounts.pos}</span>
-                        </div>
-                        <div class="s-item ${window.dashboardFilter.polarity === 'Negative' ? 'active' : ''}" data-cat="polarity" data-val="Negative">
-                            <div class="s-dot" style="background:var(--neg)"></div>Negative<span class="s-count">${polCounts.neg}</span>
-                        </div>
-                    </div>
-                    <div class="s-divider"></div>
-                `;
-                
                 let aspectHtml = `
                     <div>
                         <div class="s-section-label">Aspect category</div>
@@ -459,13 +436,12 @@ const DATA = __JSON_DATA__;
                 });
                 prodHtml += `</div>`;
                 
-                sidebar.innerHTML = polHtml + aspectHtml + prodHtml;
+                sidebar.innerHTML = aspectHtml + prodHtml;
                 
                 sidebar.querySelectorAll('.s-item').forEach(item => {
                     item.addEventListener('click', function() {
                         let cat = this.getAttribute('data-cat');
                         let val = this.getAttribute('data-val');
-                        if (cat === 'polarity') window.dashboardFilter.polarity = val;
                         if (cat === 'aspect') window.dashboardFilter.aspect = val;
                         if (cat === 'product') window.dashboardFilter.product = val;
                         
@@ -479,16 +455,9 @@ const DATA = __JSON_DATA__;
                 let filteredFeed = DATA.feed.filter(f => {
                     if (window.dashboardFilter.product !== 'Tất cả' && f.product !== window.dashboardFilter.product) return false;
                     
-                    let reqPol = window.dashboardFilter.polarity === 'Positive' ? 'pos' : (window.dashboardFilter.polarity === 'Negative' ? 'neg' : null);
                     let reqAsp = window.dashboardFilter.aspect !== 'Tất cả aspect' ? window.dashboardFilter.aspect : null;
                     
-                    if (reqPol && reqAsp) {
-                        let matchBoth = f.tags.some(t => t.polarity === reqPol && t.aspect === reqAsp);
-                        if (!matchBoth) return false;
-                    } else if (reqPol) {
-                        let matchPol = f.tags.some(t => t.polarity === reqPol);
-                        if (!matchPol) return false;
-                    } else if (reqAsp) {
+                    if (reqAsp) {
                         let matchAsp = f.tags.some(t => t.aspect === reqAsp);
                         if (!matchAsp) return false;
                     }
@@ -548,8 +517,6 @@ const DATA = __JSON_DATA__;
                 filteredData.forEach(f => {
                     f.tags.forEach(t => {
                         if (window.dashboardFilter.aspect !== 'Tất cả aspect' && t.aspect !== window.dashboardFilter.aspect) return;
-                        if (window.dashboardFilter.polarity === 'Positive' && t.polarity !== 'pos') return;
-                        if (window.dashboardFilter.polarity === 'Negative' && t.polarity !== 'neg') return;
                         
                         if (!localAspCounts[t.aspect]) localAspCounts[t.aspect] = { total: 0, pos: 0, neg: 0 };
                         localAspCounts[t.aspect].total++;
@@ -639,8 +606,6 @@ const DATA = __JSON_DATA__;
                     if (!localProdCounts[f.product]) localProdCounts[f.product] = { total: 0, pos: 0 };
                     f.tags.forEach(t => {
                         if (window.dashboardFilter.aspect !== 'Tất cả aspect' && t.aspect !== window.dashboardFilter.aspect) return;
-                        if (window.dashboardFilter.polarity === 'Positive' && t.polarity !== 'pos') return;
-                        if (window.dashboardFilter.polarity === 'Negative' && t.polarity !== 'neg') return;
                         
                         localProdCounts[f.product].total++;
                         if (t.polarity === 'pos') localProdCounts[f.product].pos++;
