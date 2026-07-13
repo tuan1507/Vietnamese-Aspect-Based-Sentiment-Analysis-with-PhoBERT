@@ -418,22 +418,44 @@ const DATA = __JSON_DATA__;
                 });
                 aspectHtml += `</div><div class="s-divider"></div>`;
                 
+                const PRODS_PER_PAGE = 20;
+                window.prodPage = window.prodPage || 1;
+
+                let sortedProds = Object.keys(prodCounts).sort((a,b) => prodCounts[b] - prodCounts[a]);
+                let totalProdPages = Math.max(1, Math.ceil(sortedProds.length / PRODS_PER_PAGE));
+                if (window.prodPage > totalProdPages) window.prodPage = 1;
+                let prodStart = (window.prodPage - 1) * PRODS_PER_PAGE;
+                let pagedProds = sortedProds.slice(prodStart, prodStart + PRODS_PER_PAGE);
+
                 let prodHtml = `
                     <div>
-                        <div class="s-section-label">Sản phẩm</div>
+                        <div class="s-section-label">Sản phẩm
+                            ${totalProdPages > 1 ? `<span style="float:right;font-size:10px;color:var(--text-muted);font-weight:400">${window.prodPage}/${totalProdPages}</span>` : ''}
+                        </div>
                         <div class="s-item ${window.dashboardFilter.product === 'Tất cả' ? 'active' : ''}" data-cat="product" data-val="Tất cả">
                             <div class="s-dot" style="background:#888"></div>Tất cả
                         </div>
                 `;
-                let sortedProds = Object.keys(prodCounts).sort((a,b) => prodCounts[b] - prodCounts[a]);
-                sortedProds.forEach(prod => {
+                pagedProds.forEach(prod => {
                     let activeClass = window.dashboardFilter.product === prod ? 'active' : '';
                     prodHtml += `
                         <div class="s-item ${activeClass}" data-cat="product" data-val="${prod}">
-                            <div class="s-dot" style="background:var(--accent-mid)"></div>${prod}<span class="s-count">${prodCounts[prod]}</span>
+                            <div class="s-dot" style="background:var(--accent-mid)"></div>
+                            <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px" title="${prod}">${prod}</span>
+                            <span class="s-count">${prodCounts[prod]}</span>
                         </div>
                     `;
                 });
+                // Nút chuyển trang sản phẩm
+                if (totalProdPages > 1) {
+                    prodHtml += `
+                        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;padding:0 2px">
+                            <button class="prod-page-btn" data-dir="-1" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--text-secondary)" ${window.prodPage === 1 ? 'disabled style="opacity:0.4;cursor:default"' : ''}>←</button>
+                            <span style="font-size:10px;color:var(--text-muted)">${prodStart+1}–${Math.min(prodStart+PRODS_PER_PAGE, sortedProds.length)} / ${sortedProds.length}</span>
+                            <button class="prod-page-btn" data-dir="1" style="font-size:11px;padding:3px 8px;border:1px solid var(--border);border-radius:4px;background:var(--surface);cursor:pointer;color:var(--text-secondary)" ${window.prodPage === totalProdPages ? 'disabled style="opacity:0.4;cursor:default"' : ''}>→</button>
+                        </div>
+                    `;
+                }
                 prodHtml += `</div>`;
                 
                 sidebar.innerHTML = aspectHtml + prodHtml;
@@ -449,9 +471,26 @@ const DATA = __JSON_DATA__;
                         window.renderFeedList();
                     });
                 });
+
+                sidebar.querySelectorAll('.prod-page-btn').forEach(btn => {
+                    btn.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        if (this.disabled) return;
+                        window.prodPage = (window.prodPage || 1) + parseInt(this.getAttribute('data-dir'));
+                        window.renderSidebar();
+                    });
+                });
             };
 
+            const ITEMS_PER_PAGE = 10;
+            window.currentPage = window.currentPage || 1;
+
             window.renderFeedList = function() {
+                window.currentPage = 1; // reset về trang 1 khi filter thay đổi
+                window.renderFeedPage();
+            };
+
+            window.renderFeedPage = function() {
                 let filteredFeed = DATA.feed.filter(f => {
                     if (window.dashboardFilter.product !== 'Tất cả' && f.product !== window.dashboardFilter.product) return false;
                     
@@ -473,16 +512,20 @@ const DATA = __JSON_DATA__;
                     return true;
                 });
                 
+                // Phân trang
+                let totalPages = Math.max(1, Math.ceil(filteredFeed.length / ITEMS_PER_PAGE));
+                if (window.currentPage > totalPages) window.currentPage = totalPages;
+                let start = (window.currentPage - 1) * ITEMS_PER_PAGE;
+                let pageFeed = filteredFeed.slice(start, start + ITEMS_PER_PAGE);
+
                 let feedHtml = `
                     <div class="feed-header">
                         Danh sách đánh giá
                         <span class="feed-count">${filteredFeed.length}</span>
                     </div>
                 `;
-                feedHtml += `
-                    <div class="feed-body">
-                `;
-                filteredFeed.forEach(f => {
+                feedHtml += `<div class="feed-body">`;
+                pageFeed.forEach(f => {
                     let tagsHtml = '';
                     f.tags.forEach(t => {
                         let cls = t.polarity === 'pos' ? 'pos' : t.polarity === 'neg' ? 'neg' : '';
@@ -499,10 +542,53 @@ const DATA = __JSON_DATA__;
                         </div>
                     `;
                 });
-                feedHtml += `
-                    </div>
-                `;
+                feedHtml += `</div>`;
+
+                // ── Build pagination HTML ──
+                if (totalPages > 1) {
+                    let pages = [];
+                    if (totalPages <= 7) {
+                        for (let i = 1; i <= totalPages; i++) pages.push(i);
+                    } else {
+                        pages.push(1);
+                        if (window.currentPage > 3) pages.push('...');
+                        let lo = Math.max(2, window.currentPage - 1);
+                        let hi = Math.min(totalPages - 1, window.currentPage + 1);
+                        for (let i = lo; i <= hi; i++) pages.push(i);
+                        if (window.currentPage < totalPages - 2) pages.push('...');
+                        pages.push(totalPages);
+                    }
+                    let btnHtml = pages.map(p =>
+                        p === '...'
+                        ? `<span style="padding:5px 4px;font-size:11px;color:var(--text-muted)">...</span>`
+                        : `<button class="page-btn ${p === window.currentPage ? 'active' : ''}" data-page="${p}">${p}</button>`
+                    ).join('');
+                    feedHtml += `
+                        <div class="pagination">
+                            <span class="page-info">Trang ${window.currentPage} / ${totalPages}</span>
+                            <div class="page-btns">
+                                <button class="page-btn" data-page="${window.currentPage - 1}" ${window.currentPage === 1 ? 'disabled' : ''}>←</button>
+                                ${btnHtml}
+                                <button class="page-btn" data-page="${window.currentPage + 1}" ${window.currentPage === totalPages ? 'disabled' : ''}>→</button>
+                            </div>
+                        </div>
+                    `;
+                }
+
                 feedCol.innerHTML = feedHtml;
+
+                // Gắn sự kiện click pagination
+                feedCol.querySelectorAll('.page-btn[data-page]').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        if (this.disabled) return;
+                        let pg = parseInt(this.getAttribute('data-page'));
+                        if (!pg || pg < 1 || pg > totalPages) return;
+                        window.currentPage = pg;
+                        window.renderFeedPage();
+                        feedCol.scrollTo({ top: 0, behavior: 'smooth' });
+                    });
+                });
+
                 updateChartPanel(filteredFeed);
             };
             

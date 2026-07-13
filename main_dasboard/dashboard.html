@@ -111,6 +111,8 @@
     #t2:checked~.layout #content2 {
       display: flex;
       overflow: hidden;
+      height: 100%;
+      min-height: 0;
     }
 
     /* Tab 2 cần flex để fix 2 cột (sidebar + main) */
@@ -359,7 +361,8 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      overflow-y: scroll;
+      overflow: hidden;
+      min-height: 0;
     }
 
     .toolbar {
@@ -490,14 +493,17 @@
       grid-template-columns: minmax(0, 1fr) 240px;
       flex: 1;
       min-height: 0;
+      height: 100%;
       max-width: 100%;
+      overflow: hidden;
     }
 
     .feed-col-wrap {
       display: flex;
       flex-direction: column;
-      flex: 1;
       min-height: 0;
+      height: 100%;
+      overflow: hidden;
     }
 
     .feed-col {
@@ -507,6 +513,7 @@
       gap: 10px;
       overflow-y: auto;
       flex: 1;
+      min-height: 0;
     }
 
     .feed-col::-webkit-scrollbar {
@@ -532,14 +539,11 @@
       flex-shrink: 0;
     }
 
-    /* 
     .feed-body {
       display: flex;
       flex-direction: column;
       gap: 10px;
-      overflow-y: scroll;
-      flex: 1;
-    } */
+    }
 
     .feed-title {
       font-size: 12px;
@@ -638,7 +642,9 @@
       display: flex;
       flex-direction: column;
       gap: 18px;
-      background: var(--surface)
+      background: var(--surface);
+      overflow-y: auto;
+      min-height: 0;
     }
 
     .chart-panel::-webkit-scrollbar {
@@ -1421,68 +1427,6 @@
 
       <!-- SIDEBAR BẢN GỐC -->
       <aside class="sidebar">
-        <div>
-          <div class="s-section-label">Aspect category</div>
-          <div class="s-item">
-            <div class="s-dot" style="background:#888"></div>Tất cả aspect
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:var(--battery)"></div>battery<span class="s-count">118</span>
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:var(--general)"></div>general<span class="s-count">86</span>
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:var(--connectivity)"></div>connectivity<span class="s-count">69</span>
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:var(--speaker)"></div>speaker<span class="s-count">50</span>
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:var(--keyboard)"></div>keyboard<span class="s-count">33</span>
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:var(--warranty)"></div>warranty<span class="s-count">29</span>
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:var(--staff)"></div>staff_service<span class="s-count">24</span>
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:var(--display)"></div>display<span class="s-count">22</span>
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:#E24B4A"></div>accessory<span class="s-count">18</span>
-          </div>
-        </div>
-
-        <div class="s-divider"></div>
-
-        <div>
-          <div class="s-section-label">Sản phẩm</div>
-          <div class="s-item">
-            <div class="s-dot" style="background:#888"></div>Tất cả
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:var(--accent-mid)"></div>HONOR X8b<span class="s-count">48</span>
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:var(--accent-mid)"></div>Nokia 105 4G Pro<span
-              class="s-count">98</span>
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:var(--accent-mid)"></div>Nokia HMD 105<span class="s-count">72</span>
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:var(--accent-mid)"></div>Masstel IZI T6<span class="s-count">68</span>
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:var(--accent-mid)"></div>Nokia 220 4G<span class="s-count">88</span>
-          </div>
-          <div class="s-item">
-            <div class="s-dot" style="background:var(--accent-mid)"></div>Nokia 110 4G Pro<span
-              class="s-count">44</span>
-          </div>
-        </div>
       </aside>
 
       <!-- MAIN BẢN GỐC -->
@@ -1595,19 +1539,7 @@
                 </div>
               </div>
             </div>
-
-            <div class="pagination">
-              <span class="page-info">Trang 1 / 37</span>
-              <div class="page-btns">
-                <button class="page-btn active">1</button>
-                <button class="page-btn">2</button>
-                <button class="page-btn">3</button>
-                <span style="padding:5px 4px;font-size:11px;color:var(--text-muted)">...</span>
-                <button class="page-btn">37</button>
-                <button class="page-btn">→</button>
-              </div>
-            </div>
-          </div>
+          </div><!-- /feed-col-wrap -->
 
           <!-- CHART PANEL ĐẦY ĐỦ BẢN GỐC -->
           <div class="chart-panel">
