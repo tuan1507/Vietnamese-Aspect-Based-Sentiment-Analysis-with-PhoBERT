@@ -1,3 +1,15 @@
+---
+title: Absa Analyzer
+emoji: 📊
+colorFrom: green
+colorTo: blue
+sdk: streamlit
+sdk_version: 1.40.0
+app_file: app.py
+pinned: false
+license: mit
+---
+
 # ABSA Analyzer — Phân tích cảm xúc tiếng Việt theo khía cạnh
 
 > Tự động trích xuất khía cạnh và phân loại cảm xúc từ đánh giá sản phẩm điện tử tiếng Việt, sử dụng PhoBERT.
@@ -26,10 +38,10 @@ streamlit run app.py
 
 Dataset đánh giá sản phẩm điện tử tiếng việt thu thập từ các sàn thương mại điện tử, gồm điện thoại, laptop và phụ kiện.
 
-| File | Mô tả | Số dòng |
-|---|---|---|
-| `Dataset_ATE_final.csv` | Gán nhãn B-ASP / I-ASP / O theo chuẩn BIO, dùng train model ATE 
-| `Dataset_ASC_final.csv` | Gán nhãn Tích cực / Tiêu cực cho từng cặp (câu, aspect), dùng train model ASC
+| File | Mô tả |
+|---|---|
+| `Dataset_ATE_final.csv` | Gán nhãn B-ASP / I-ASP / O theo chuẩn BIO, dùng train model ATE |
+| `Dataset_ASC_final.csv` | Gán nhãn Tích cực / Tiêu cực cho từng cặp (câu, aspect), dùng train model ASC |
 
 Dataset đầy đủ (thô + đã xử lý) lưu tại: [Naut1507/Vietnamese-product-reviewss](https://huggingface.co/datasets/Naut1507/Vietnamese-product-reviewss)
 
